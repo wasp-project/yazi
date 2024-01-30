@@ -14,45 +14,48 @@
 
 package main
 
-type MListNode struct {
-	Key  string
-	Val  int
-	Next *MListNode
-	Prev *MListNode
+import "time"
+
+type MListNode[K comparable, V any] struct {
+	Key  K
+	Val  V
+	Next *MListNode[K, V]
+	Prev *MListNode[K, V]
 }
 
-type LRUCache struct {
-	cache    map[string]*MListNode
+type LRUCache[K comparable, V any] struct {
+	cache    map[K]*MListNode[K, V]
 	capacity int
 	size     int
-	head     *MListNode
-	tail     *MListNode
+	head     *MListNode[K, V]
+	tail     *MListNode[K, V]
 }
 
-func Constructor(capacity int) LRUCache {
-	cache := LRUCache{
-		cache:    map[string]*MListNode{},
+func Constructor[K comparable, V any](capacity int) LRUCache[K, V] {
+	cache := LRUCache[K, V]{
+		cache:    map[K]*MListNode[K, V]{},
 		capacity: capacity,
-		head:     &MListNode{},
-		tail:     &MListNode{},
+		head:     &MListNode[K, V]{},
+		tail:     &MListNode[K, V]{},
 	}
 	cache.head.Next = cache.tail
 	cache.tail.Prev = cache.head
 	return cache
-
 }
 
-func (c *LRUCache) Get(key string) int {
+func (c *LRUCache[K, V]) Get(key K) (val V, gotten bool) {
 	if _, ok := c.cache[key]; ok {
 		c.MoveToHead(c.cache[key])
-		return c.cache[key].Val
+		return c.cache[key].Val, ok
 	}
-	return -1
+
+	return val, false
 }
 
-func (c *LRUCache) Set(key string, value int) {
+// TODO: implement ttl
+func (c *LRUCache[K, V]) Set(key K, value V, ttl time.Duration) (prev V, replaced bool) {
 	if _, ok := c.cache[key]; !ok {
-		p := &MListNode{
+		p := &MListNode[K, V]{
 			Key: key,
 			Val: value,
 		}
@@ -64,31 +67,36 @@ func (c *LRUCache) Set(key string, value int) {
 			delete(c.cache, t.Key)
 			c.size--
 		}
+		replaced = false
+		return
 	} else {
+		prev = c.cache[key].Val
+		replaced = true
 		c.cache[key].Val = value
 		c.MoveToHead(c.cache[key])
+		return
 	}
 }
 
-func (c *LRUCache) MoveToHead(p *MListNode) {
+func (c *LRUCache[K, V]) MoveToHead(p *MListNode[K, V]) {
 	c.Remove(p)
 	c.AddToHead(p)
 }
 
-func (c *LRUCache) RemoveFromTail() *MListNode {
+func (c *LRUCache[K, V]) RemoveFromTail() *MListNode[K, V] {
 	p := c.tail.Prev
 	c.Remove(p)
 	return p
 }
 
-func (c *LRUCache) AddToHead(p *MListNode) {
+func (c *LRUCache[K, V]) AddToHead(p *MListNode[K, V]) {
 	p.Next = c.head.Next
 	c.head.Next = p
 	p.Next.Prev = p
 	p.Prev = c.head
 }
 
-func (c *LRUCache) Remove(p *MListNode) {
+func (c *LRUCache[K, V]) Remove(p *MListNode[K, V]) {
 	p.Prev.Next = p.Next
 	p.Next.Prev = p.Prev
 }
