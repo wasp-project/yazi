@@ -22,7 +22,7 @@ import (
 
 func TestCacheDefaultkey(t *testing.T) {
 	// l := New[string, int](1)
-	l := Constructor[string, int](1)
+	l := New[string, int](1)
 	var k string
 	var i int = 10
 
@@ -37,7 +37,7 @@ func TestCacheDefaultkey(t *testing.T) {
 
 func TestCacheGetSet(t *testing.T) {
 	// l := New[int, int](128)
-	l := Constructor[int, int](128)
+	l := New[int, int](128)
 
 	if v, ok := l.Get(5); ok {
 		t.Fatalf("bad returned value: %v", v)
@@ -65,7 +65,7 @@ func TestCacheGetSet(t *testing.T) {
 }
 
 func BenchmarkCacheRand(b *testing.B) {
-	l := Constructor[int64, int64](8192)
+	l := New[int64, int64](8192)
 
 	trace := make([]int64, b.N*2)
 	for i := 0; i < b.N*2; i++ {
@@ -91,7 +91,7 @@ func BenchmarkCacheRand(b *testing.B) {
 }
 
 func BenchmarkCacheFreq(b *testing.B) {
-	l := Constructor[int64, int64](8192)
+	l := New[int64, int64](8192)
 
 	trace := make([]int64, b.N*2)
 	for i := 0; i < b.N*2; i++ {
@@ -120,7 +120,7 @@ func BenchmarkCacheFreq(b *testing.B) {
 }
 
 func BenchmarkCacheTTL(b *testing.B) {
-	l := Constructor[int64, int64](8192)
+	l := New[int64, int64](8192)
 
 	trace := make([]int64, b.N*2)
 	for i := 0; i < b.N*2; i++ {
