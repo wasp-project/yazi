@@ -59,6 +59,8 @@ github.com/lxzan/memorycache v1.2.2 h1:LboLvqNtCOi9EINEuNPVMGnMY2uTxE8UPcHAPEKpl
 github.com/lxzan/memorycache v1.2.2/go.mod h1:G2+0gqlUtU+hJ52a4//FJk+m23LUDJszr66J3rwFhPk=
 github.com/maypok86/otter v1.0.0 h1:nP13eaFQrfRQHD1vxEgdlqR9gLHvfW2VcS0hFitglIY=
 github.com/maypok86/otter v1.0.0/go.mod h1:koSPT30yWtqMNrFohaywMlgSHCuUg6IVqeDerwIM/Mg=
+github.com/mlycore/log v0.1.0 h1:BOKHlglXWF202b1vY0tla9OVgvt44TGAiCRZrG7PIMQ=
+github.com/mlycore/log v0.1.0/go.mod h1:o0me6JuyA3eshxtKC6ElXStaf0VMbUESW8BnruY53f0=
 github.com/ncw/directio v1.0.5 h1:JSUBhdjEvVaJvOoyPAbcW0fnd0tvRXD76wEfZ1KcQz4=
 github.com/ncw/directio v1.0.5/go.mod h1:rX/pKEYkOXBGOggmcyJeJGloCkleSvphPx2eV3t6ROk=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
