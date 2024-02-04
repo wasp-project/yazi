@@ -18,6 +18,40 @@ import (
 	"testing"
 )
 
+func TestCacheSetGet(t *testing.T) {
+	l := New[int, int](8192)
+
+	for i := 0; i < 8192; i++ {
+		l.Set(i, i, 0)
+	}
+
+	for i := 0; i < 8192; i++ {
+		if i%2 == 0 {
+			l.Set(i, i+1, 0)
+		}
+	}
+
+	if l.size != 8192 {
+		t.Errorf("expected size 8192, got %d", l.size)
+	}
+
+	for i := 0; i < 8192; i++ {
+		if _, ok := l.Get(i); ok {
+			if i%2 == 0 {
+				if l.cache[i].Val != i+1 {
+					t.Errorf("expected %d, got %d", i, l.cache[i].Val)
+				}
+			} else {
+				if l.cache[i].Val != i {
+					t.Errorf("expected %d, got %d", i, l.cache[i].Val)
+				}
+			}
+		} else {
+			t.Errorf("expected %d, got nothing", i)
+		}
+	}
+}
+
 func BenchmarkCacheSet(b *testing.B) {
 	l := New[int, int](8192)
 
