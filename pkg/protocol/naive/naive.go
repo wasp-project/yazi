@@ -13,3 +13,66 @@
 // limitations under the License.
 
 package naive
+
+type CommandKind byte
+
+type Command struct {
+	Kind     CommandKind
+	Verb     CommandVerb
+	Request  Request
+	Response Response
+}
+
+type Request struct {
+	Data any
+}
+
+type Response struct {
+	Data  any
+	Error error
+}
+
+type KVPair struct {
+	Key   string
+	Value string
+}
+
+func (c *Command) GetKind() CommandKind {
+	return c.Kind
+}
+
+type CommandVerb string
+
+const (
+	CommandVerbGet CommandVerb = "get"
+	CommandVerbSet CommandVerb = "set"
+)
+
+func (c *Command) GetVerb() CommandVerb {
+	return c.Verb
+}
+
+func (c *Command) SetRequest(data any) {
+	c.Request = Request{
+		Data: data,
+	}
+}
+
+func (c *Command) GetRequest() Request {
+	return c.Request
+}
+
+func (c *Command) SetResponse(data any, err error) {
+	c.Response = Response{
+		Data:  data,
+		Error: err,
+	}
+}
+
+func (c *Command) GetResponse() Response {
+	return c.Response
+}
+
+const (
+	CommandKindString CommandKind = '+'
+)
