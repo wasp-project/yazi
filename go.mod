@@ -10,6 +10,7 @@ require (
 	github.com/elastic/go-freelru v0.11.0
 	github.com/lxzan/memorycache v1.2.2
 	github.com/maypok86/otter v1.0.0
+	github.com/mlycore/log v0.1.0
 	github.com/orca-zhang/ecache v1.1.1
 	github.com/phuslu/lru v1.0.0
 )
