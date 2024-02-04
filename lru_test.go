@@ -16,6 +16,7 @@ package lru
 
 import (
 	"testing"
+	"time"
 )
 
 func TestCacheSetGet(t *testing.T) {
@@ -46,6 +47,31 @@ func TestCacheSetGet(t *testing.T) {
 			}
 		} else {
 			t.Errorf("expected %d, got nothing", i)
+		}
+	}
+}
+func TestCacheTTL(t *testing.T) {
+	l := New[int, int](8192)
+
+	for i := 0; i < 8192; i++ {
+		if i%2 == 0 {
+			l.Set(i, i, 1*time.Second)
+		} else {
+			l.Set(i, i, 0)
+		}
+	}
+
+	time.Sleep(2 * time.Second)
+
+	for i := 0; i < 8192; i++ {
+		if i%2 == 0 {
+			if _, ok := l.Get(i); ok {
+				t.Errorf("expected TTL to expire at key %d", i)
+			}
+		} else {
+			if _, ok := l.Get(i); !ok {
+				t.Errorf("expected %d, got nothing", i)
+			}
 		}
 	}
 }
