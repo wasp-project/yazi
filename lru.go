@@ -21,6 +21,7 @@ type MListNode[K comparable, V any] struct {
 	Val  V
 	Next *MListNode[K, V]
 	Prev *MListNode[K, V]
+	TTL  *time.Time
 }
 
 type LRUCache[K comparable, V any] struct {
@@ -44,20 +45,29 @@ func New[K comparable, V any](capacity int) LRUCache[K, V] {
 }
 
 func (c *LRUCache[K, V]) Get(key K) (val V, gotten bool) {
-	if _, ok := c.cache[key]; ok {
-		c.MoveToHead(c.cache[key])
-		return c.cache[key].Val, ok
+	if v, ok := c.cache[key]; ok {
+		if v.TTL != nil && v.TTL.Before(time.Now()) {
+			c.Remove(c.cache[key])
+			delete(c.cache, key)
+			return val, false
+		} else {
+			c.MoveToHead(c.cache[key])
+			return v.Val, ok
+		}
 	}
 
 	return val, false
 }
 
-// TODO: implement ttl
 func (c *LRUCache[K, V]) Set(key K, value V, ttl time.Duration) (prev V, replaced bool) {
 	if _, ok := c.cache[key]; !ok {
 		p := &MListNode[K, V]{
 			Key: key,
 			Val: value,
+		}
+		if ttl != 0 {
+			c := time.Now().Add(ttl)
+			p.TTL = &c
 		}
 		c.AddToHead(p)
 		c.cache[key] = p
