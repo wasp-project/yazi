@@ -16,19 +16,22 @@ package config
 
 import (
 	"github.com/wasp-project/yazi/pkg/policy"
+	"github.com/wasp-project/yazi/pkg/protocol"
 	"github.com/wasp-project/yazi/pkg/storage"
 )
 
 type ServerConfig struct {
-	Port    int                  `json:"port,omitempty" default:3479`
-	Policy  policy.KeyPolicy     `json:"policy,omitempty" default:"lru"`
-	Storage storage.StorageClass `json:"storage,omitempty" default:"memory"`
+	Port     int                  `json:"port,omitempty" default:"3479"`
+	Protocol protocol.Protocol    `json:"protocol,omitempty" default:"naive"`
+	Policy   policy.KeyPolicy     `json:"policy,omitempty" default:"lru"`
+	Storage  storage.StorageClass `json:"storage,omitempty" default:"memory"`
 }
 
 func Default() *ServerConfig {
 	return &ServerConfig{
-		Port:    3479,
-		Policy:  policy.KeyPolicyLRU,
-		Storage: storage.StorageClassMemory,
+		Port:     3456,
+		Policy:   policy.KeyPolicyLRU,
+		Storage:  storage.StorageClassMemory,
+		Protocol: protocol.ProtocolNaive,
 	}
 }
