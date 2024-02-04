@@ -14,3 +14,7 @@
 
 build:
 	go build -o bin/yazi cmd/yazi/yazi.go
+test:
+	go test ./pkg/... -gcflags=-l -coverprofile=coverage.txt
+benchmark:
+	go test ./pkg/... -bench=. -race -count=1 -coverprofile=coverage.txt

@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Tests
         run: |
-          go test -v -bench=. -race -count=1 -coverprofile=coverage.txt
+          make benchmark 
       - name: Upload Codecov
         uses: codecov/codecov-action@v3
         with:
