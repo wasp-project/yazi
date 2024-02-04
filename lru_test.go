@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package yazi
+package lru
 
 import (
 	"testing"
@@ -37,14 +37,12 @@ func TestCacheSetGet(t *testing.T) {
 
 	for i := 0; i < 8192; i++ {
 		if _, ok := l.Get(i); ok {
-			if i%2 == 0 {
-				if l.cache[i].Val != i+1 {
-					t.Errorf("expected %d, got %d", i, l.cache[i].Val)
-				}
-			} else {
-				if l.cache[i].Val != i {
-					t.Errorf("expected %d, got %d", i, l.cache[i].Val)
-				}
+			if i%2 == 0 && l.cache[i].Val != i+1 {
+				t.Errorf("expected %d, got %d", i, l.cache[i].Val)
+			}
+
+			if i%2 != 0 && l.cache[i].Val != i {
+				t.Errorf("expected %d, got %d", i, l.cache[i].Val)
 			}
 		} else {
 			t.Errorf("expected %d, got nothing", i)
