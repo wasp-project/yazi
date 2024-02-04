@@ -15,11 +15,14 @@
 package server
 
 import (
+	"bufio"
 	"net"
 	"strconv"
 	"time"
 
 	"github.com/wasp-project/yazi/pkg/config"
+	"github.com/wasp-project/yazi/pkg/protocol"
+	"github.com/wasp-project/yazi/pkg/protocol/naive"
 	"github.com/wasp-project/yazi/pkg/storage"
 	"github.com/wasp-project/yazi/pkg/storage/memory"
 
@@ -33,7 +36,7 @@ type Server struct {
 	core   *TCPServer
 	connCh chan net.Conn
 	errCh  chan error
-	// codec protocol.Codec
+	codec  naive.Codec
 }
 
 func NewServer(conf *config.ServerConfig) *Server {
@@ -53,6 +56,13 @@ func (s *Server) Run() {
 		fallthrough
 	default:
 		s.store = memory.New()
+	}
+
+	switch s.conf.Protocol {
+	case protocol.ProtocolNaive:
+		fallthrough
+	default:
+		s.codec = &naive.NaiveCodec{}
 	}
 
 	s.core = &TCPServer{
@@ -92,10 +102,58 @@ func (s *Server) ListenAndServe() error {
 
 func (s *Server) handle(conn net.Conn) error {
 	defer conn.Close()
-	conn.Write([]byte("hello"))
-	return nil
-}
 
-func (s *Server) execute() error {
+	for {
+		reader := bufio.NewReader(conn)
+		data, err := reader.ReadBytes(byte(';'))
+		if err != nil {
+			return err
+		}
+		log.Debugf("received data: %s", data)
+
+		switch cmd := s.codec.Decode(data); cmd.GetKind() {
+		case naive.CommandKindString:
+			{
+				switch cmd.GetVerb() {
+				case naive.CommandVerbSet:
+					{
+						kv := cmd.Request.Data.(naive.KVPair)
+						if err := s.store.Set(kv.Key, kv.Value); err != nil {
+							log.Errorf("Error setting key %s: %s", kv.Key, err)
+							cmd.SetResponse(nil, err)
+							resp := s.codec.Encode(cmd)
+							conn.Write(resp)
+						} else {
+							cmd.SetResponse(nil, nil)
+							resp := s.codec.Encode(cmd)
+							conn.Write(resp)
+						}
+					}
+				case naive.CommandVerbGet:
+					{
+						var err error
+						kv := cmd.Request.Data.(naive.KVPair)
+						if kv.Value, err = s.store.Get(kv.Key); err != nil {
+							log.Errorf("Error getting key %s: %s", kv.Key, err)
+							cmd.SetResponse(nil, err)
+							resp := s.codec.Encode(cmd)
+							conn.Write(resp)
+						} else {
+							cmd.SetResponse(naive.KVPair{
+								Key:   kv.Key,
+								Value: kv.Value,
+							}, nil)
+							resp := s.codec.Encode(cmd)
+							conn.Write(resp)
+						}
+					}
+				}
+			}
+		default:
+			log.Warnln("Unrecognized command kind")
+		}
+
+	}
+
 	return nil
 }
