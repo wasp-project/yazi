@@ -15,10 +15,11 @@
 package server
 
 import (
-	"github.com/mlycore/log"
 	"github.com/wasp-project/yazi/pkg/config"
 	"github.com/wasp-project/yazi/pkg/storage"
 	"github.com/wasp-project/yazi/pkg/storage/memory"
+
+	"github.com/mlycore/log"
 )
 
 type Server struct {
