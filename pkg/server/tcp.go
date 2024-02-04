@@ -12,23 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package server
 
 import (
-	"github.com/wasp-project/yazi/pkg/policy"
-	"github.com/wasp-project/yazi/pkg/storage"
+	"net"
 )
 
-type ServerConfig struct {
-	Port    int                  `json:"port,omitempty" default:3479`
-	Policy  policy.KeyPolicy     `json:"policy,omitempty" default:"lru"`
-	Storage storage.StorageClass `json:"storage,omitempty" default:"memory"`
+type TCPServer struct {
+	Listener net.Listener
+	connCh   chan net.Conn
+	errCh    chan error
 }
 
-func Default() *ServerConfig {
-	return &ServerConfig{
-		Port:    3479,
-		Policy:  policy.KeyPolicyLRU,
-		Storage: storage.StorageClassMemory,
+func (s *TCPServer) Open(addr string) (net.Conn, error) {
+	var err error
+	if s.Listener, err = net.Listen("tcp", addr); err != nil {
+		return nil, err
 	}
+
+	return nil, nil
+}
+
+func (s *TCPServer) Listen() {
+	for {
+		if s.Listener == nil {
+			break
+		}
+
+		if conn, err := s.Listener.Accept(); err != nil {
+			s.errCh <- err
+			break
+		} else {
+			s.connCh <- conn
+		}
+	}
+}
+
+func (s *TCPServer) Close() error {
+	return s.Listener.Close()
 }

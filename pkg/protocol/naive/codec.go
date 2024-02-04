@@ -12,23 +12,3 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
-
-import (
-	"github.com/wasp-project/yazi/pkg/policy"
-	"github.com/wasp-project/yazi/pkg/storage"
-)
-
-type ServerConfig struct {
-	Port    int                  `json:"port,omitempty" default:3479`
-	Policy  policy.KeyPolicy     `json:"policy,omitempty" default:"lru"`
-	Storage storage.StorageClass `json:"storage,omitempty" default:"memory"`
-}
-
-func Default() *ServerConfig {
-	return &ServerConfig{
-		Port:    3479,
-		Policy:  policy.KeyPolicyLRU,
-		Storage: storage.StorageClassMemory,
-	}
-}
