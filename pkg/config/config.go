@@ -31,7 +31,7 @@ func Default() *ServerConfig {
 	return &ServerConfig{
 		Port:     3456,
 		Policy:   policy.KeyPolicyLRU,
-		Storage:  storage.StorageClassMemory,
+		Storage:  storage.StorageClassLocal,
 		Protocol: protocol.ProtocolNaive,
 	}
 }
