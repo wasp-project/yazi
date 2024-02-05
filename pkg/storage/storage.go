@@ -16,10 +16,14 @@ package storage
 
 import (
 	"errors"
+	"fmt"
+	"runtime"
 	"time"
 
+	"github.com/mlycore/log"
 	"github.com/wasp-project/yazi/pkg/policy"
 	"github.com/wasp-project/yazi/pkg/policy/lru"
+	"github.com/wasp-project/yazi/pkg/storage/local"
 )
 
 type StorageClass string
@@ -35,6 +39,8 @@ type KVStore interface {
 	Get(key string) (string, error)
 	Set(key, val string) error
 	Expire(key string, ttl time.Duration) error
+
+	Encode() []byte
 }
 
 type Store struct {
@@ -77,9 +83,79 @@ func (s *Store) Expire(key string, ttl time.Duration) error {
 	return nil
 }
 
+func (s *Store) Encode() []byte {
+	return s.cache.Encode()
+}
+
+type Persistenter interface {
+	Write(data []byte) (int, error)
+}
+
+var _ Persistenter = &local.DiskWriter{}
+
 type Manager struct {
+	tasks map[string]func()
+	p     Persistenter
+	store KVStore
 }
 
 func NewManager() *Manager {
-	return &Manager{}
+	return &Manager{
+		tasks: map[string]func(){},
+	}
+}
+
+func (m *Manager) SetPersistenter(p Persistenter) *Manager {
+	m.p = p
+	return m
+}
+
+func (m *Manager) SetTask(name string, f func()) *Manager {
+	m.tasks[name] = f
+	return m
+}
+
+func (m *Manager) SetStore(s KVStore) *Manager {
+	m.store = s
+	return m
+}
+
+func (m *Manager) Persistent() {
+	ticker := time.NewTicker(10 * time.Second)
+
+	for range ticker.C {
+		{
+			data := m.store.Encode()
+			if n, err := m.p.Write(data); err != nil {
+				log.Warnf("Persistent data error: %s", err)
+			} else {
+				log.Infof("Persistent data %d bytes", n)
+			}
+		}
+	}
+}
+
+func (m *Manager) Run() {
+	for _, task := range m.tasks {
+		go task()
+	}
+}
+
+var TaskMemoryCheck = func() {
+	ticker := time.NewTicker(1 * time.Second)
+
+	bToMb := func(b uint64) uint64 {
+		return b / 1024 / 1024
+	}
+
+	for range ticker.C {
+		{
+			var m runtime.MemStats
+			runtime.ReadMemStats(&m)
+			fmt.Printf("Alloc = %v MiB", bToMb(m.Alloc))
+			fmt.Printf("\tTotalAlloc = %v MiB", bToMb(m.TotalAlloc))
+			fmt.Printf("\tSys = %v MiB", bToMb(m.Sys))
+			fmt.Printf("\tNumGC = %v\n", m.NumGC)
+		}
+	}
 }

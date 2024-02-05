@@ -14,12 +14,17 @@
 
 package storage
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type Cache interface {
 	Get(key string) (val string, gotten bool)
 	Set(key, val string) (prev string, replaced bool)
 	Expire(key string, ttl time.Duration) (updated bool)
+
+	Encode() []byte
 }
 
 type memcache struct {
@@ -55,4 +60,9 @@ func (c *memcache) Set(key string, val string) (prev string, replaced bool) {
 func (c *memcache) Expire(key string, ttl time.Duration) bool {
 	//TODO: implement
 	return false
+}
+
+func (c *memcache) Encode() []byte {
+	d, _ := json.Marshal(c.data)
+	return d
 }
