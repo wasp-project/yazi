@@ -15,23 +15,41 @@
 package config
 
 import (
+	"os"
+
 	"github.com/wasp-project/yazi/pkg/policy"
 	"github.com/wasp-project/yazi/pkg/protocol"
 	"github.com/wasp-project/yazi/pkg/storage"
+
+	"github.com/mlycore/log"
+	"gopkg.in/yaml.v2"
 )
 
 type ServerConfig struct {
 	Port     int                  `json:"port,omitempty" default:"3479"`
 	Protocol protocol.Protocol    `json:"protocol,omitempty" default:"naive"`
-	Policy   policy.KeyPolicy     `json:"policy,omitempty" default:"lru"`
+	Policy   policy.KeyPolicy     `json:"policy,omitempty" default:""`
 	Storage  storage.StorageClass `json:"storage,omitempty" default:"memory"`
+	Capacity int                  `json:"capacity,omitempty" default:"1024"`
 }
 
 func Default() *ServerConfig {
 	return &ServerConfig{
 		Port:     3456,
-		Policy:   policy.KeyPolicyLRU,
 		Storage:  storage.StorageClassLocal,
 		Protocol: protocol.ProtocolNaive,
+		Capacity: 1024,
 	}
+}
+
+func (c *ServerConfig) Load(path string) *ServerConfig {
+	if data, err := os.ReadFile(path); err != nil {
+		log.Errorf("Read config file error: %s", err)
+	} else {
+		if err := yaml.Unmarshal(data, c); err != nil {
+			log.Errorf("Read config file error: %s", err)
+		}
+	}
+
+	return c
 }

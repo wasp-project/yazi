@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-	conf := config.Default()
+	conf := config.Default().Load("./config/default.yml")
 	s := server.NewServer(conf)
 	s.Run()
 }
