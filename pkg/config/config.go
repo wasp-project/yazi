@@ -36,7 +36,6 @@ type ServerConfig struct {
 func Default() *ServerConfig {
 	return &ServerConfig{
 		Port:     3456,
-		Storage:  storage.StorageClassLocal,
 		Protocol: protocol.ProtocolNaive,
 		Capacity: 1024,
 	}
