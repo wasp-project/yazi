@@ -51,6 +51,7 @@ func (s *Server) Run() {
 	log.Infof("Server is configured with storage: %s", s.conf.Storage)
 	log.Infof("Server is configured with policy: %s", s.conf.Policy)
 
+	// init storage
 	switch s.conf.Storage {
 	case storage.StorageClassMemory:
 		fallthrough
@@ -58,6 +59,9 @@ func (s *Server) Run() {
 		s.store = memory.New()
 	}
 
+	s.store.SetPolicy(s.conf.Policy)
+
+	// init protocol
 	switch s.conf.Protocol {
 	case protocol.ProtocolNaive:
 		fallthrough
@@ -65,11 +69,13 @@ func (s *Server) Run() {
 		s.codec = &naive.NaiveCodec{}
 	}
 
+	// init tcp server
 	s.core = &TCPServer{
 		connCh: s.connCh,
 		errCh:  s.errCh,
 	}
 
+	// start server
 	if err := s.ListenAndServe(); err != nil {
 		log.Fatalf("Server cannot listen and serve...")
 	}

@@ -40,8 +40,8 @@ type LRUCache[K comparable, V any] struct {
 	tail     *MListNode[K, V]
 }
 
-func New[K comparable, V any](capacity int) LRUCache[K, V] {
-	cache := LRUCache[K, V]{
+func New[K comparable, V any](capacity int) *LRUCache[K, V] {
+	cache := &LRUCache[K, V]{
 		cache:    map[K]*MListNode[K, V]{},
 		capacity: capacity,
 		head:     &MListNode[K, V]{},

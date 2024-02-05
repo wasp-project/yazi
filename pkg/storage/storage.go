@@ -15,8 +15,7 @@
 package storage
 
 import (
-	"time"
-
+	"github.com/wasp-project/yazi/pkg/policy"
 	"github.com/wasp-project/yazi/pkg/storage/memory"
 )
 
@@ -32,5 +31,7 @@ var _ KVStore = &memory.Store{}
 type KVStore interface {
 	Get(key string) (string, error)
 	Set(key, val string) error
-	SetWithTTL(key, val string, ttl time.Duration) error
+
+	SetPolicy(p policy.KeyPolicy)
+	// SetWithTTL(key, val string, ttl time.Duration) error
 }
