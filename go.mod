@@ -3,6 +3,7 @@ module github.com/wasp-project/yazi
 go 1.21.6
 
 require (
+	github.com/database-mesh/golang-sdk v0.0.0-20230719103615-a3cc1537545c
 	github.com/mlycore/log v0.1.0
 	github.com/spf13/cobra v1.8.0
 	gopkg.in/yaml.v2 v2.4.0
