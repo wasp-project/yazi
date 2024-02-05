@@ -117,6 +117,10 @@ func (c *LRUCache[K, V]) Expire(key K, ttl time.Duration) (updated bool) {
 	return
 }
 
+func (c *LRUCache[K, V]) Encode() []byte {
+	return nil
+}
+
 func (c *LRUCache[K, V]) MoveToHead(p *MListNode[K, V]) {
 	c.Remove(p)
 	c.AddToHead(p)
