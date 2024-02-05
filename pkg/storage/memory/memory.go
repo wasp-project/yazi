@@ -16,22 +16,68 @@ package memory
 
 import (
 	"errors"
-	"time"
 
 	"github.com/wasp-project/yazi/pkg/policy"
-	"github.com/wasp-project/yazi/pkg/policy/lru"
 )
+
+type Cache interface {
+	Get(key string) (val string, gotten bool)
+	Set(key, val string) (prev string, replaced bool)
+}
+
+var _ Cache = &memcache{}
+
+type memcache struct {
+	metadata cachemeta
+	data     map[string]string
+}
+
+type cachemeta struct {
+	capacity  int
+	size      int
+	maxmemory int
+}
+
+const (
+	defaultCapacity = 1024
+)
+
+func (c *memcache) SetCapacity(cap int) {
+	c.metadata.capacity = cap
+}
+
+func (c *memcache) Get(key string) (val string, gotten bool) {
+	v, ok := c.data[key]
+	return v, ok
+}
+
+func (c *memcache) Set(key string, val string) (prev string, replaced bool) {
+	prev, replaced = c.data[key]
+	c.data[key] = val
+	return prev, replaced
+}
 
 type Store struct {
 	policy policy.KeyPolicy
-	cache  lru.LRUCache[string, string]
+	cache  Cache
 }
 
 func New() *Store {
 	return &Store{
-		policy: policy.KeyPolicyLRU,
-		cache:  lru.New[string, string](8192),
+		cache: &memcache{
+			metadata: cachemeta{
+				capacity: defaultCapacity,
+			},
+			data: map[string]string{},
+		},
 	}
+}
+
+func (s *Store) SetPolicy(p policy.KeyPolicy) {
+	s.policy = p
+}
+
+func (s *Store) SetStorageCapacity(cap int) {
 }
 
 func (s *Store) Get(key string) (string, error) {
@@ -43,11 +89,6 @@ func (s *Store) Get(key string) (string, error) {
 }
 
 func (s *Store) Set(key, value string) error {
-	s.cache.Set(key, value, 0)
-	return nil
-}
-
-func (s *Store) SetWithTTL(key, value string, ttl time.Duration) error {
-	s.cache.Set(key, value, ttl)
+	s.cache.Set(key, value)
 	return nil
 }
