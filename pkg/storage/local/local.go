@@ -32,5 +32,13 @@ func (w *DiskWriter) Write(data []byte) (int, error) {
 		return 0, err
 	}
 
+	if err := f.Truncate(0); err != nil {
+		return 0, err
+	}
+
+	if _, err := f.Seek(0, 0); err != nil {
+		return 0, err
+	}
+
 	return f.Write(data)
 }
