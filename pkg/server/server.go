@@ -24,6 +24,7 @@ import (
 	"github.com/wasp-project/yazi/pkg/protocol"
 	"github.com/wasp-project/yazi/pkg/protocol/naive"
 	"github.com/wasp-project/yazi/pkg/storage"
+	"github.com/wasp-project/yazi/pkg/storage/local"
 
 	"github.com/mlycore/log"
 )
@@ -52,14 +53,20 @@ func (s *Server) Run() {
 	log.Infof("Server is configured with policy: %s", s.conf.Policy)
 
 	// init storage
-	s.store = storage.NewKVStore(s.conf.Capacity, s.conf.Policy)
-
+	store := storage.NewKVStore(s.conf.Capacity, s.conf.Policy)
 	switch s.conf.Storage {
 	case storage.StorageClassLocal:
-		fallthrough
+		w := local.NewWriter()
+		s.manager = storage.NewManager().SetPersistenter(w).SetStore(store)
 	default:
-		s.manager = storage.NewManager()
+		s.manager = storage.NewManager().SetStore(store)
 	}
+	s.store = store
+
+	s.manager.SetTask("memory-check", storage.TaskMemoryCheck)
+	s.manager.SetTask("persistent", s.manager.Persistent)
+
+	go s.manager.Run()
 
 	// init protocol
 	switch s.conf.Protocol {
