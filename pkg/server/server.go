@@ -58,13 +58,13 @@ func (s *Server) Run() {
 	case storage.StorageClassLocal:
 		w := local.NewWriter()
 		s.manager = storage.NewManager().SetPersistenter(w).SetStore(store)
+		s.manager.SetTask("persistent", s.manager.Persistent)
 	default:
 		s.manager = storage.NewManager().SetStore(store)
 	}
-	s.store = store
 
+	s.store = store
 	s.manager.SetTask("memory-check", storage.TaskMemoryCheck)
-	s.manager.SetTask("persistent", s.manager.Persistent)
 
 	go s.manager.Run()
 
