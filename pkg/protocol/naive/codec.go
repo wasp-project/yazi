@@ -66,6 +66,7 @@ func (c *NaiveCodec) Encode(cmd *Command) []byte {
 
 	if cmd.Response.Error != nil {
 		data = append(data, []byte(cmd.Response.Error.Error())...)
+		data = append(data, []byte("\n")...)
 		return data
 	}
 
