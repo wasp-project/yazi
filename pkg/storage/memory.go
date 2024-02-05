@@ -12,20 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package memory
+package storage
 
-import (
-	"errors"
-
-	"github.com/wasp-project/yazi/pkg/policy"
-)
+import "time"
 
 type Cache interface {
 	Get(key string) (val string, gotten bool)
 	Set(key, val string) (prev string, replaced bool)
+	Expire(key string, ttl time.Duration) (updated bool)
 }
-
-var _ Cache = &memcache{}
 
 type memcache struct {
 	metadata cachemeta
@@ -57,38 +52,7 @@ func (c *memcache) Set(key string, val string) (prev string, replaced bool) {
 	return prev, replaced
 }
 
-type Store struct {
-	policy policy.KeyPolicy
-	cache  Cache
-}
-
-func New() *Store {
-	return &Store{
-		cache: &memcache{
-			metadata: cachemeta{
-				capacity: defaultCapacity,
-			},
-			data: map[string]string{},
-		},
-	}
-}
-
-func (s *Store) SetPolicy(p policy.KeyPolicy) {
-	s.policy = p
-}
-
-func (s *Store) SetStorageCapacity(cap int) {
-}
-
-func (s *Store) Get(key string) (string, error) {
-	v, ok := s.cache.Get(key)
-	if !ok {
-		return v, errors.New("key not found")
-	}
-	return v, nil
-}
-
-func (s *Store) Set(key, value string) error {
-	s.cache.Set(key, value)
-	return nil
+func (c *memcache) Expire(key string, ttl time.Duration) bool {
+	//TODO: implement
+	return false
 }

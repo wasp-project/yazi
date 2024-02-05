@@ -24,14 +24,14 @@ import (
 	"github.com/wasp-project/yazi/pkg/protocol"
 	"github.com/wasp-project/yazi/pkg/protocol/naive"
 	"github.com/wasp-project/yazi/pkg/storage"
-	"github.com/wasp-project/yazi/pkg/storage/memory"
 
 	"github.com/mlycore/log"
 )
 
 type Server struct {
-	conf  *config.ServerConfig
-	store storage.KVStore
+	conf    *config.ServerConfig
+	manager *storage.Manager
+	store   storage.KVStore
 
 	core   *TCPServer
 	connCh chan net.Conn
@@ -52,14 +52,14 @@ func (s *Server) Run() {
 	log.Infof("Server is configured with policy: %s", s.conf.Policy)
 
 	// init storage
+	s.store = storage.NewKVStore(1024, s.conf.Policy)
+
 	switch s.conf.Storage {
-	case storage.StorageClassMemory:
+	case storage.StorageClassLocal:
 		fallthrough
 	default:
-		s.store = memory.New()
+		s.manager = storage.NewManager()
 	}
-
-	s.store.SetPolicy(s.conf.Policy)
 
 	// init protocol
 	switch s.conf.Protocol {
