@@ -23,12 +23,12 @@ func TestCacheSetGet(t *testing.T) {
 	l := New[int, int](8192)
 
 	for i := 0; i < 8192; i++ {
-		l.Set(i, i, 0)
+		l.Set(i, i)
 	}
 
 	for i := 0; i < 8192; i++ {
 		if i%2 == 0 {
-			l.Set(i, i+1, 0)
+			l.Set(i, i+1)
 		}
 	}
 
@@ -55,9 +55,10 @@ func TestCacheTTL(t *testing.T) {
 
 	for i := 0; i < 8192; i++ {
 		if i%2 == 0 {
-			l.Set(i, i, 1*time.Second)
+			l.Set(i, i)
+			l.Expire(i, 1*time.Second)
 		} else {
-			l.Set(i, i, 0)
+			l.Set(i, i)
 		}
 	}
 
@@ -83,7 +84,7 @@ func BenchmarkCacheSet(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		l.Set(i, i, 0)
+		l.Set(i, i)
 	}
 }
 
@@ -94,10 +95,10 @@ func BenchmarkCacheUpdate(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		l.Set(i, i, 0)
+		l.Set(i, i)
 	}
 	for i := 0; i < b.N; i++ {
-		l.Set(i, i+1, 0)
+		l.Set(i, i+1)
 	}
 }
 
@@ -108,7 +109,7 @@ func BenchmarkCacheGet(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		l.Set(i, i, 0)
+		l.Set(i, i)
 	}
 
 	for i := 0; i < b.N; i++ {
