@@ -52,7 +52,7 @@ func (s *Server) Run() {
 	log.Infof("Server is configured with policy: %s", s.conf.Policy)
 
 	// init storage
-	s.store = storage.NewKVStore(1024, s.conf.Policy)
+	s.store = storage.NewKVStore(s.conf.Capacity, s.conf.Policy)
 
 	switch s.conf.Storage {
 	case storage.StorageClassLocal:
