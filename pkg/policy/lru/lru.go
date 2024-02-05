@@ -17,11 +17,19 @@ package lru
 import "time"
 
 type MListNode[K comparable, V any] struct {
-	Key  K
-	Val  V
-	Next *MListNode[K, V]
-	Prev *MListNode[K, V]
-	TTL  *time.Time
+	metadata NodeMeta[K, V]
+	data     NodeData[K, V]
+}
+
+type NodeData[K comparable, V any] struct {
+	key K
+	val V
+}
+
+type NodeMeta[K comparable, V any] struct {
+	next *MListNode[K, V]
+	prev *MListNode[K, V]
+	ttl  *time.Time
 }
 
 type LRUCache[K comparable, V any] struct {
@@ -39,20 +47,20 @@ func New[K comparable, V any](capacity int) LRUCache[K, V] {
 		head:     &MListNode[K, V]{},
 		tail:     &MListNode[K, V]{},
 	}
-	cache.head.Next = cache.tail
-	cache.tail.Prev = cache.head
+	cache.head.metadata.next = cache.tail
+	cache.tail.metadata.prev = cache.head
 	return cache
 }
 
 func (c *LRUCache[K, V]) Get(key K) (val V, gotten bool) {
 	if v, ok := c.cache[key]; ok {
-		if v.TTL != nil && v.TTL.Before(time.Now()) {
+		if v.metadata.ttl != nil && v.metadata.ttl.Before(time.Now()) {
 			c.Remove(c.cache[key])
 			delete(c.cache, key)
 			return val, false
 		} else {
 			c.MoveToHead(c.cache[key])
-			return v.Val, ok
+			return v.data.val, ok
 		}
 	}
 
@@ -62,27 +70,29 @@ func (c *LRUCache[K, V]) Get(key K) (val V, gotten bool) {
 func (c *LRUCache[K, V]) Set(key K, value V, ttl time.Duration) (prev V, replaced bool) {
 	if _, ok := c.cache[key]; !ok {
 		p := &MListNode[K, V]{
-			Key: key,
-			Val: value,
+			data: NodeData[K, V]{
+				key: key,
+				val: value,
+			},
 		}
 		if ttl != 0 {
 			c := time.Now().Add(ttl)
-			p.TTL = &c
+			p.metadata.ttl = &c
 		}
 		c.AddToHead(p)
 		c.cache[key] = p
 		c.size++
 		if c.size > c.capacity {
 			t := c.RemoveFromTail()
-			delete(c.cache, t.Key)
+			delete(c.cache, t.data.key)
 			c.size--
 		}
 		replaced = false
 		return
 	} else {
-		prev = c.cache[key].Val
+		prev = c.cache[key].data.val
 		replaced = true
-		c.cache[key].Val = value
+		c.cache[key].data.val = value
 		c.MoveToHead(c.cache[key])
 		return
 	}
@@ -94,19 +104,19 @@ func (c *LRUCache[K, V]) MoveToHead(p *MListNode[K, V]) {
 }
 
 func (c *LRUCache[K, V]) RemoveFromTail() *MListNode[K, V] {
-	p := c.tail.Prev
+	p := c.tail.metadata.prev
 	c.Remove(p)
 	return p
 }
 
 func (c *LRUCache[K, V]) AddToHead(p *MListNode[K, V]) {
-	p.Next = c.head.Next
-	c.head.Next = p
-	p.Next.Prev = p
-	p.Prev = c.head
+	p.metadata.next = c.head.metadata.next
+	c.head.metadata.next = p
+	p.metadata.next.metadata.prev = p
+	p.metadata.prev = c.head
 }
 
 func (c *LRUCache[K, V]) Remove(p *MListNode[K, V]) {
-	p.Prev.Next = p.Next
-	p.Next.Prev = p.Prev
+	p.metadata.prev.metadata.next = p.metadata.next
+	p.metadata.next.metadata.prev = p.metadata.prev
 }

@@ -38,12 +38,12 @@ func TestCacheSetGet(t *testing.T) {
 
 	for i := 0; i < 8192; i++ {
 		if _, ok := l.Get(i); ok {
-			if i%2 == 0 && l.cache[i].Val != i+1 {
-				t.Errorf("expected %d, got %d", i, l.cache[i].Val)
+			if i%2 == 0 && l.cache[i].data.val != i+1 {
+				t.Errorf("expected %d, got %d", i, l.cache[i].data.val)
 			}
 
-			if i%2 != 0 && l.cache[i].Val != i {
-				t.Errorf("expected %d, got %d", i, l.cache[i].Val)
+			if i%2 != 0 && l.cache[i].data.val != i {
+				t.Errorf("expected %d, got %d", i, l.cache[i].data.val)
 			}
 		} else {
 			t.Errorf("expected %d, got nothing", i)
