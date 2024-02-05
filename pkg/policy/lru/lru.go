@@ -21,6 +21,10 @@ type MListNode[K comparable, V any] struct {
 	data     NodeData[K, V]
 }
 
+func (n *MListNode[K, V]) isExpired() bool {
+	return n.metadata.ttl != nil && n.metadata.ttl.Before(time.Now())
+}
+
 type NodeData[K comparable, V any] struct {
 	key K
 	val V
@@ -52,33 +56,45 @@ func New[K comparable, V any](capacity int) *LRUCache[K, V] {
 	return cache
 }
 
-func (c *LRUCache[K, V]) Get(key K) (val V, gotten bool) {
-	if v, ok := c.cache[key]; ok {
-		if v.metadata.ttl != nil && v.metadata.ttl.Before(time.Now()) {
-			c.Remove(c.cache[key])
+func (c *LRUCache[K, V]) get(key K) *MListNode[K, V] {
+	if n, ok := c.cache[key]; ok {
+		if n.isExpired() {
+			c.Remove(n)
 			delete(c.cache, key)
-			return val, false
+			return nil
 		} else {
-			c.MoveToHead(c.cache[key])
-			return v.data.val, ok
+			return n
 		}
+	}
+	return nil
+}
+
+func (c *LRUCache[K, V]) Get(key K) (val V, gotten bool) {
+	n := c.get(key)
+	if n != nil {
+		c.MoveToHead(n)
+		return n.data.val, true
 	}
 
 	return val, false
 }
 
-func (c *LRUCache[K, V]) Set(key K, value V, ttl time.Duration) (prev V, replaced bool) {
-	if _, ok := c.cache[key]; !ok {
+func (c *LRUCache[K, V]) Set(key K, value V) (prev V, replaced bool) {
+	n := c.get(key)
+	if n != nil {
+		prev = n.data.val
+		replaced = true
+		n.data.val = value
+		c.MoveToHead(n)
+		return
+	} else {
 		p := &MListNode[K, V]{
 			data: NodeData[K, V]{
 				key: key,
 				val: value,
 			},
 		}
-		if ttl != 0 {
-			c := time.Now().Add(ttl)
-			p.metadata.ttl = &c
-		}
+
 		c.AddToHead(p)
 		c.cache[key] = p
 		c.size++
@@ -89,13 +105,16 @@ func (c *LRUCache[K, V]) Set(key K, value V, ttl time.Duration) (prev V, replace
 		}
 		replaced = false
 		return
-	} else {
-		prev = c.cache[key].data.val
-		replaced = true
-		c.cache[key].data.val = value
-		c.MoveToHead(c.cache[key])
-		return
 	}
+}
+
+func (c *LRUCache[K, V]) Expire(key K, ttl time.Duration) (updated bool) {
+	if n, ok := c.cache[key]; ok {
+		updated = n.metadata.ttl != nil
+		cur := time.Now().Add(ttl)
+		c.cache[key].metadata.ttl = &cur
+	}
+	return
 }
 
 func (c *LRUCache[K, V]) MoveToHead(p *MListNode[K, V]) {
