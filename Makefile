@@ -14,6 +14,7 @@
 
 build:
 	go build -o bin/yazi cmd/yazi/yazi.go
+	go build -o bin/yazictl cmd/cli/yazi_ctl.go
 test:
 	go test ./pkg/... -gcflags=-l -coverprofile=coverage.txt
 benchmark:
