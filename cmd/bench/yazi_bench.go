@@ -18,6 +18,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/database-mesh/golang-sdk/pkg/random"
 	"github.com/spf13/cobra"
@@ -41,22 +42,46 @@ var bulksetCmd = &cobra.Command{
 		conn := connect()
 		defer conn.Close()
 
-		for i := 0; i < n; i++ {
-			key := random.StringN(4)
-			value := random.StringN(6)
+		t := time.NewTicker(1 * time.Second)
 
-			req := fmt.Sprintf("+set %s %s;", key, value)
-			_, err := conn.Write([]byte(req))
-			if err != nil {
-				panic(err)
-			}
+		var (
+			sum int
+			ite int
+		)
+	FOR:
+		for {
+			select {
+			case <-t.C:
+				{
+					fmt.Printf("current: %d/s\n", ite)
+					sum += ite
+					ite = 0
+				}
+			default:
+				{
+					if sum <= n {
+						key := random.StringN(4)
+						value := random.StringN(6)
 
-			reader := bufio.NewReader(conn)
-			_, _, err = reader.ReadLine()
-			if err != nil {
-				panic(err)
+						req := fmt.Sprintf("+set %s %s;", key, value)
+						_, err := conn.Write([]byte(req))
+						if err != nil {
+							panic(err)
+						}
+
+						reader := bufio.NewReader(conn)
+						_, _, err = reader.ReadLine()
+						if err != nil {
+							panic(err)
+						}
+						ite++
+					} else {
+						break FOR
+					}
+				}
 			}
 		}
+
 		fmt.Printf("%d keys set\n", n)
 	},
 }
