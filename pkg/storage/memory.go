@@ -16,6 +16,7 @@ package storage
 
 import (
 	"encoding/json"
+	"sync"
 	"time"
 )
 
@@ -30,6 +31,7 @@ type Cache interface {
 type memcache struct {
 	metadata cachemeta
 	data     map[string]string
+	lock     sync.Mutex
 }
 
 type cachemeta struct {
@@ -47,11 +49,15 @@ func (c *memcache) SetCapacity(cap int) {
 }
 
 func (c *memcache) Get(key string) (val string, gotten bool) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	v, ok := c.data[key]
 	return v, ok
 }
 
 func (c *memcache) Set(key string, val string) (prev string, replaced bool) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	prev, replaced = c.data[key]
 	c.data[key] = val
 	return prev, replaced
@@ -63,6 +69,8 @@ func (c *memcache) Expire(key string, ttl time.Duration) bool {
 }
 
 func (c *memcache) Encode() []byte {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	d, _ := json.Marshal(c.data)
 	return d
 }
