@@ -3,3 +3,4 @@ bench/**
 coverage.txt
 bin/**
 yazi.data
+config/**
