@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/mlycore/log"
@@ -59,6 +60,7 @@ func NewKVStore(cap int, p policy.KeyPolicy) *Store {
 				capacity: cap,
 			},
 			data: map[string]string{},
+			lock: sync.Mutex{},
 		}
 	}
 
