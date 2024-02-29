@@ -16,6 +16,8 @@ package config
 
 import (
 	"os"
+	"reflect"
+	"strconv"
 
 	"github.com/wasp-project/yazi/pkg/policy"
 	"github.com/wasp-project/yazi/pkg/protocol"
@@ -35,12 +37,30 @@ type ServerConfig struct {
 }
 
 func Default() *ServerConfig {
-	return &ServerConfig{
-		Port:     3456,
-		Protocol: protocol.ProtocolNaive,
-		Capacity: 1024,
-		Loglevel: "info",
+	conf := &ServerConfig{}
+	for i := 0; i < reflect.TypeOf(ServerConfig{}).NumField(); i++ {
+		field := reflect.TypeOf(ServerConfig{}).Field(i)
+		if tag := field.Tag.Get("default"); tag != "" {
+			switch field.Name {
+			case "Port":
+				p, _ := strconv.ParseInt(tag, 10, 64)
+				conf.Port = int(p)
+			case "Protocol":
+				conf.Protocol = protocol.Protocol(tag)
+			case "Policy":
+				conf.Policy = policy.KeyPolicy(tag)
+			case "Storage":
+				conf.Storage = storage.StorageClass(tag)
+			case "Capacity":
+				c, _ := strconv.ParseInt(tag, 10, 64)
+				conf.Capacity = int(c)
+			case "Loglevel":
+				conf.Loglevel = tag
+			}
+		}
 	}
+
+	return conf
 }
 
 func (c *ServerConfig) Load(path string) *ServerConfig {
