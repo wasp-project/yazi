@@ -16,6 +16,8 @@ package server
 
 import (
 	"bufio"
+	"context"
+	"fmt"
 	"net"
 	"strconv"
 	"time"
@@ -23,8 +25,10 @@ import (
 	"github.com/wasp-project/yazi/pkg/config"
 	"github.com/wasp-project/yazi/pkg/protocol"
 	"github.com/wasp-project/yazi/pkg/protocol/naive"
+	"github.com/wasp-project/yazi/pkg/server/pb"
 	"github.com/wasp-project/yazi/pkg/storage"
 	"github.com/wasp-project/yazi/pkg/storage/local"
+	"google.golang.org/grpc"
 
 	"github.com/mlycore/log"
 )
@@ -38,6 +42,8 @@ type Server struct {
 	connCh chan net.Conn
 	errCh  chan error
 	codec  naive.Codec
+
+	pb.UnimplementedRPCServerServer
 }
 
 func NewServer(conf *config.ServerConfig) *Server {
@@ -51,6 +57,7 @@ func NewServer(conf *config.ServerConfig) *Server {
 func (s *Server) Run() {
 	log.Infof("Server is configured with storage: %s", s.conf.Storage)
 	log.Infof("Server is configured with policy: %s", s.conf.Policy)
+	log.Infof("Server is configured with protocol: %s", s.conf.Protocol)
 
 	// init storage
 	store := storage.NewKVStore(s.conf.Capacity, s.conf.Policy)
@@ -71,11 +78,18 @@ func (s *Server) Run() {
 	// init protocol
 	switch s.conf.Protocol {
 	case protocol.ProtocolNaive:
+		// grpc does not need an independent codec
+		s.codec = &naive.NaiveCodec{}
+		s.startNaiveServer()
+	case protocol.ProtocolGrpc:
 		fallthrough
 	default:
-		s.codec = &naive.NaiveCodec{}
+		s.codec = &protocol.EmptyCodec{}
+		s.startGrpcServer()
 	}
+}
 
+func (s *Server) startNaiveServer() {
 	// init tcp server
 	s.core = &TCPServer{
 		connCh: s.connCh,
@@ -83,14 +97,12 @@ func (s *Server) Run() {
 	}
 
 	// start server
-	if err := s.ListenAndServe(); err != nil {
+	if err := s.listenAndServe(); err != nil {
 		log.Fatalf("Server cannot listen and serve...")
 	}
-
-	log.Infoln("Server is running...")
 }
 
-func (s *Server) ListenAndServe() error {
+func (s *Server) listenAndServe() error {
 	s.core.Open(net.JoinHostPort("127.0.0.1", strconv.Itoa(s.conf.Port)))
 	defer s.core.Close()
 
@@ -169,4 +181,35 @@ func (s *Server) handle(conn net.Conn) error {
 	}
 
 	return nil
+}
+
+func (s *Server) Set(ctx context.Context, req *pb.KVRequest) (resp *pb.KVResponse, err error) {
+	if err = s.store.Set(req.Key, req.Value); err != nil {
+		log.Errorf("Error setting key %s: %s", req.Key, err)
+	}
+
+	return
+}
+
+func (s *Server) Get(ctx context.Context, req *pb.KVRequest) (*pb.KVResponse, error) {
+	resp := &pb.KVResponse{}
+	var err error
+
+	if resp.Value, err = s.store.Get(req.Key); err != nil {
+		log.Errorf("Error getting key %s: %s", req.Key, err)
+	}
+
+	return resp, err
+}
+
+func (s *Server) startGrpcServer() {
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", s.conf.Port))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	gs := grpc.NewServer()
+	pb.RegisterRPCServerServer(gs, s)
+	if err := gs.Serve(lis); err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
 }

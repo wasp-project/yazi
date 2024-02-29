@@ -16,11 +16,15 @@ package client
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"net"
+	"time"
 
 	"github.com/wasp-project/yazi/pkg/protocol"
+	"github.com/wasp-project/yazi/pkg/server/pb"
+	"google.golang.org/grpc"
 )
 
 func NewYaziClient(p protocol.Protocol) (Client, error) {
@@ -90,20 +94,41 @@ func (c *naiveclient) Set(key, value string) error {
 	return nil
 }
 
-type grpcclient struct{}
+type grpcclient struct {
+	conn *grpc.ClientConn
+}
 
 func (c *grpcclient) Connect(host, port string) error {
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", host, port), grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		return err
+	}
+	c.conn = conn
 	return nil
 }
 
 func (c *grpcclient) Close() error {
+	c.conn.Close()
 	return nil
 }
 
 func (c *grpcclient) Get(key string) (string, error) {
-	return "", nil
+	cli := pb.NewRPCServerClient(c.conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	resp, err := cli.Get(ctx, &pb.KVRequest{Key: key})
+	if err != nil {
+		return "", err
+	}
+	return resp.Value, nil
 }
 
 func (c *grpcclient) Set(key, value string) error {
-	return nil
+	cli := pb.NewRPCServerClient(c.conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	_, err := cli.Set(ctx, &pb.KVRequest{Key: key, Value: value})
+	return err
 }
