@@ -89,15 +89,15 @@ func (s *Store) Encode() []byte {
 	return s.cache.Encode()
 }
 
-type Persistenter interface {
+type Persister interface {
 	Write(data []byte) (int, error)
 }
 
-var _ Persistenter = &local.DiskWriter{}
+var _ Persister = &local.DiskWriter{}
 
 type Manager struct {
 	tasks map[string]func()
-	p     Persistenter
+	p     Persister
 	store KVStore
 }
 
@@ -107,7 +107,7 @@ func NewManager() *Manager {
 	}
 }
 
-func (m *Manager) SetPersistenter(p Persistenter) *Manager {
+func (m *Manager) SetPersistenter(p Persister) *Manager {
 	m.p = p
 	return m
 }
