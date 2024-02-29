@@ -108,8 +108,8 @@ var (
 )
 
 func init() {
-	rootCmd.Flags().StringVarP(&proto, "protocol", "p", "naive", "client server protocol")
-	rootCmd.Flags().StringVarP(&host, "host", "h", "127.0.0.1", "server host")
+	rootCmd.Flags().StringVarP(&proto, "protocol", "p", "grpc", "client server protocol")
+	rootCmd.Flags().StringVarP(&host, "host", "H", "127.0.0.1", "server host")
 	rootCmd.Flags().StringVarP(&port, "port", "P", "3456", "server port")
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(setCmd)
