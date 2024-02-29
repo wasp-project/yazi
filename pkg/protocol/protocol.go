@@ -18,4 +18,5 @@ type Protocol string
 
 const (
 	ProtocolNaive Protocol = "naive"
+	ProtocolGrpc  Protocol = "grpc"
 )
