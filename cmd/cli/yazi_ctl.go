@@ -15,88 +15,102 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"net"
+
+	"github.com/wasp-project/yazi/pkg/client"
+	"github.com/wasp-project/yazi/pkg/protocol"
 
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "yazictl <command>",
-	Short: "The cli tool for Yazi",
+var (
+	rootCmd = &cobra.Command{
+		Use:   "yazictl <command>",
+		Short: "The cli tool for Yazi",
 
-	CompletionOptions: cobra.CompletionOptions{
-		DisableDefaultCmd: true,
-		HiddenDefaultCmd:  true,
-	},
-}
+		CompletionOptions: cobra.CompletionOptions{
+			DisableDefaultCmd: true,
+			HiddenDefaultCmd:  true,
+		},
+	}
 
-var getCmd = &cobra.Command{
-	Use:   "get",
-	Short: "yaizctl get <key>",
+	getCmd = &cobra.Command{
+		Use:   "get",
+		Short: "yaizctl get <key>",
+		Run:   getf,
+	}
 
-	Run: func(cmd *cobra.Command, args []string) {
+	setCmd = &cobra.Command{
+		Use:   "set",
+		Short: "yazictl set <key> <value>",
+		Run:   setf,
+	}
+
+	expireCmd = &cobra.Command{
+		Use:   "expire",
+		Short: "yazictl expire <key> <ttl>",
+		Run:   expiref,
+	}
+)
+
+var (
+	getf = func(cmd *cobra.Command, args []string) {
+		client, err := client.NewYaziClient(protocol.Protocol(proto))
+		if err != nil {
+			panic(err)
+		}
+
+		if err := client.Connect(host, port); err != nil {
+			panic(err)
+		}
+		defer client.Close()
+
 		key = args[0]
-		conn := connect()
-		defer conn.Close()
 
-		req := fmt.Sprintf("+get %s;", key)
-		_, err := conn.Write([]byte(req))
+		if val, err := client.Get(key); err != nil {
+			panic(err)
+		} else {
+			fmt.Printf("%s", val)
+		}
+	}
+
+	setf = func(cmd *cobra.Command, args []string) {
+		client, err := client.NewYaziClient(protocol.Protocol(proto))
 		if err != nil {
 			panic(err)
 		}
-
-		reader := bufio.NewReader(conn)
-		resp, _, err := reader.ReadLine()
-		if err != nil {
+		if err := client.Connect(host, port); err != nil {
 			panic(err)
 		}
-		fmt.Printf("%s", resp)
-	},
-}
+		defer client.Close()
 
-var setCmd = &cobra.Command{
-	Use:   "set",
-	Short: "yazictl set <key> <value>",
-
-	Run: func(cmd *cobra.Command, args []string) {
 		key = args[0]
 		value = args[1]
 
-		conn := connect()
-		defer conn.Close()
-
-		req := fmt.Sprintf("+set %s %s;", key, value)
-		_, err := conn.Write([]byte(req))
-		if err != nil {
+		if err := client.Set(key, value); err != nil {
 			panic(err)
+		} else {
+			fmt.Println("ok")
 		}
+	}
 
-		reader := bufio.NewReader(conn)
-		resp, _, err := reader.ReadLine()
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("%s", resp)
-	},
-}
+	expiref = func(cmd *cobra.Command, args []string) {
 
-var expireCmd = &cobra.Command{
-	Use:   "expire",
-	Short: "yazictl expire <key> <ttl>",
-
-	Run: func(cmd *cobra.Command, args []string) {
-
-	},
-}
+	}
+)
 
 var (
 	key   string
 	value string
+	proto string
+	port  string
+	host  string
 )
 
 func init() {
+	rootCmd.Flags().StringVarP(&proto, "protocol", "p", "naive", "client server protocol")
+	rootCmd.Flags().StringVarP(&host, "host", "h", "127.0.0.1", "server host")
+	rootCmd.Flags().StringVarP(&port, "port", "P", "3456", "server port")
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(setCmd)
 	rootCmd.AddCommand(expireCmd)
@@ -104,12 +118,4 @@ func init() {
 
 func main() {
 	rootCmd.Execute()
-}
-
-func connect() net.Conn {
-	conn, err := net.Dial("tcp", "localhost:3456")
-	if err != nil {
-		panic(err)
-	}
-	return conn
 }
