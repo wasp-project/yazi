@@ -31,6 +31,7 @@ type ServerConfig struct {
 	Policy   policy.KeyPolicy     `json:"policy,omitempty" default:""`
 	Storage  storage.StorageClass `json:"storage,omitempty" default:"memory"`
 	Capacity int                  `json:"capacity,omitempty" default:"1024"`
+	Loglevel string               `json:"loglevel,omitempty" default:"info"`
 }
 
 func Default() *ServerConfig {
@@ -38,6 +39,7 @@ func Default() *ServerConfig {
 		Port:     3456,
 		Protocol: protocol.ProtocolNaive,
 		Capacity: 1024,
+		Loglevel: "info",
 	}
 }
 

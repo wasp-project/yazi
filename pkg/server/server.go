@@ -55,6 +55,8 @@ func NewServer(conf *config.ServerConfig) *Server {
 }
 
 func (s *Server) Run() {
+	log.SetLevel(s.conf.Loglevel)
+
 	log.Infof("Server is configured with storage: %s", s.conf.Storage)
 	log.Infof("Server is configured with policy: %s", s.conf.Policy)
 	log.Infof("Server is configured with protocol: %s", s.conf.Protocol)
