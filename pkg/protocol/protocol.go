@@ -14,9 +14,16 @@
 
 package protocol
 
+import "github.com/wasp-project/yazi/pkg/protocol/naive"
+
 type Protocol string
 
 const (
 	ProtocolNaive Protocol = "naive"
 	ProtocolGrpc  Protocol = "grpc"
 )
+
+type EmptyCodec struct{}
+
+func (c *EmptyCodec) Decode(data []byte) *naive.Command { return nil }
+func (c *EmptyCodec) Encode(cmd *naive.Command) []byte  { return nil }
