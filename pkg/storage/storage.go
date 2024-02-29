@@ -16,7 +16,6 @@ package storage
 
 import (
 	"errors"
-	"fmt"
 	"runtime"
 	"sync"
 	"time"
@@ -131,7 +130,7 @@ func (m *Manager) Persistent() {
 			if n, err := m.p.Write(data); err != nil {
 				log.Warnf("Persistent data error: %s", err)
 			} else {
-				log.Infof("Persistent data %d bytes", n)
+				log.Tracef("Persistent data %d bytes", n)
 			}
 		}
 	}
@@ -154,10 +153,7 @@ var TaskMemoryCheck = func() {
 		{
 			var m runtime.MemStats
 			runtime.ReadMemStats(&m)
-			fmt.Printf("Alloc = %v MiB", bToMb(m.Alloc))
-			fmt.Printf("\tTotalAlloc = %v MiB", bToMb(m.TotalAlloc))
-			fmt.Printf("\tSys = %v MiB", bToMb(m.Sys))
-			fmt.Printf("\tNumGC = %v\n", m.NumGC)
+			log.Tracef("Alloc = %v MiB\tTotalAlloc = %v MiB\tSys = %v MiB\tNumGC = %v", bToMb(m.Alloc), bToMb(m.TotalAlloc), bToMb(m.Sys), m.NumGC)
 		}
 	}
 }
