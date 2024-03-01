@@ -40,12 +40,8 @@ type cachemeta struct {
 	maxmemory int
 }
 
-const (
-	defaultCapacity = 1024
-)
-
-func (c *memcache) SetCapacity(cap int) {
-	c.metadata.capacity = cap
+func (c *memcache) SetCapacity(capacity int) {
+	c.metadata.capacity = capacity
 }
 
 func (c *memcache) Get(key string) (val string, gotten bool) {

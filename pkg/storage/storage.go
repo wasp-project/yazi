@@ -20,10 +20,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mlycore/log"
 	"github.com/wasp-project/yazi/pkg/policy"
 	"github.com/wasp-project/yazi/pkg/policy/lru"
 	"github.com/wasp-project/yazi/pkg/storage/local"
+
+	"github.com/mlycore/log"
 )
 
 type StorageClass string
@@ -47,16 +48,24 @@ type Store struct {
 	cache Cache
 }
 
-func NewKVStore(cap int, p policy.KeyPolicy) *Store {
+func TODO() {
+	log.Warnf("Not implemented yet")
+}
+
+func NewKVStore(capacity int, p policy.KeyPolicy) *Store {
 	s := &Store{}
 
 	switch p {
+	case policy.KeyPolicyTTL:
+		TODO()
 	case policy.KeyPolicyLRU:
-		s.cache = lru.New[string, string](cap)
+		s.cache = lru.New[string, string](capacity)
 	default:
 		s.cache = &memcache{
 			metadata: cachemeta{
-				capacity: cap,
+				capacity:  capacity,
+				size:      0,
+				maxmemory: 2048,
 			},
 			data: map[string]string{},
 			lock: sync.Mutex{},
