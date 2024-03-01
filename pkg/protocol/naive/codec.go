@@ -73,7 +73,7 @@ func (c *NaiveCodec) Encode(cmd *Command) []byte {
 	switch cmd.Verb {
 	case CommandVerbGet:
 		{
-			kv := cmd.Response.Data.(KVPair)
+			kv, _ := cmd.Response.Data.(KVPair)
 			data = append(data, []byte(kv.Value)...)
 		}
 	case CommandVerbSet:
