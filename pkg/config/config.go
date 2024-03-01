@@ -34,6 +34,8 @@ type ServerConfig struct {
 	Storage  storage.StorageClass `json:"storage,omitempty" default:"memory"`
 	Capacity int                  `json:"capacity,omitempty" default:"1024"`
 	Loglevel string               `json:"loglevel,omitempty" default:"info"`
+	RaftPort int                  `json:"raftPort,omitempty"`
+	RaftNode string               `json:"raftNode,omitempty"`
 }
 
 func Default() *ServerConfig {
@@ -70,6 +72,23 @@ func (c *ServerConfig) Load(path string) *ServerConfig {
 		if err := yaml.Unmarshal(data, c); err != nil {
 			log.Errorf("Read config file error: %s", err)
 		}
+	}
+
+	// check if the config is overrided by env
+	if os.Getenv("PORT") != "" {
+		if p, err := strconv.ParseInt(os.Getenv("PORT"), 10, 64); err == nil {
+			c.Port = int(p)
+		}
+	}
+
+	if os.Getenv("RAFT_PORT") != "" {
+		if p, err := strconv.ParseInt(os.Getenv("RAFT_PORT"), 10, 64); err == nil {
+			c.RaftPort = int(p)
+		}
+	}
+
+	if os.Getenv("RAFT_NODE") != "" {
+		c.RaftNode = os.Getenv("RAFT_NODE")
 	}
 
 	return c
