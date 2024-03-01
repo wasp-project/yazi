@@ -15,6 +15,8 @@
 package server
 
 import (
+	"encoding/json"
+
 	"github.com/wasp-project/yazi/pkg/config"
 	"github.com/wasp-project/yazi/pkg/protocol"
 	"github.com/wasp-project/yazi/pkg/protocol/naive"
@@ -54,10 +56,16 @@ func (s *Server) Run() {
 	log.Infof("Server is configured with storage: %s", s.conf.Storage)
 	log.Infof("Server is configured with policy: %s", s.conf.Policy)
 	log.Infof("Server is configured with protocol: %s", s.conf.Protocol)
+	log.Infof("Server is configured with port: %d", s.conf.Port)
+	log.Infof("Server is configured with raft port: %d", s.conf.RaftPort)
+	log.Infof("Server is configured with raft node: %s", s.conf.RaftNode)
 
 	// init storage
 	store := storage.NewKVStore(s.conf.Capacity, s.conf.Policy)
 	s.ncore.SetStorage(store)
+
+	s.initServerMetadata()
+	s.initRaftMetadata()
 
 	switch s.conf.Storage {
 	case storage.StorageClassLocal:
@@ -72,4 +80,29 @@ func (s *Server) Run() {
 
 	go s.manager.Run()
 	s.ncore.Run()
+}
+
+type meta struct {
+	Port int `json:"port,omitempty"`
+}
+
+func (s *Server) initServerMetadata() error {
+	if data, err := json.Marshal(meta{Port: s.conf.Port}); err != nil {
+		return err
+	} else {
+		return s.ncore.SetMeta("", string(data))
+	}
+}
+
+type raft struct {
+	Port int    `json:"port,omitempty"`
+	Node string `json:"node,omitempty"`
+}
+
+func (s *Server) initRaftMetadata() error {
+	if data, err := json.Marshal(raft{Port: s.conf.RaftPort, Node: s.conf.RaftNode}); err != nil {
+		return err
+	} else {
+		return s.ncore.SetRaft("", string(data))
+	}
 }
