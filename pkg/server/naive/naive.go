@@ -22,6 +22,7 @@ import (
 
 	cn "github.com/wasp-project/yazi/pkg/protocol/naive"
 	"github.com/wasp-project/yazi/pkg/storage"
+	"github.com/wasp-project/yazi/pkg/utils"
 
 	"github.com/mlycore/log"
 )
@@ -133,4 +134,34 @@ func (s *naive) handle(conn net.Conn) error {
 
 	return nil
 
+}
+
+func (s *naive) GetMeta(key string) (string, error) {
+	utils.TODO()
+	return "", nil
+}
+
+func (s *naive) SetMeta(key, value string) error {
+	utils.TODO()
+	return nil
+}
+
+func (s *naive) DelMeta(key string) error {
+	utils.TODO()
+	return nil
+}
+
+func (s *naive) GetRaft(key string) (string, error) {
+	utils.TODO()
+	return "", nil
+}
+
+func (s *naive) SetRaft(key, value string) error {
+	utils.TODO()
+	return nil
+}
+
+func (s *naive) DelRaft(key string) error {
+	utils.TODO()
+	return nil
 }
