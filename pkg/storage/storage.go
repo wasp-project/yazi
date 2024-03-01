@@ -17,6 +17,7 @@ package storage
 import (
 	"errors"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 
@@ -73,7 +74,7 @@ func NewKVStore(capacity int, p policy.KeyPolicy) *Store {
 }
 
 func (s *Store) Get(key string) (string, error) {
-	v, ok := s.cache.Get(key)
+	v, ok := s.cache.Get(strings.TrimSpace(key))
 	if !ok {
 		return v, errors.New("key not found")
 	}
@@ -81,12 +82,12 @@ func (s *Store) Get(key string) (string, error) {
 }
 
 func (s *Store) Set(key, value string) error {
-	s.cache.Set(key, value)
+	s.cache.Set(strings.TrimSpace(key), value)
 	return nil
 }
 
 func (s *Store) Expire(key string, ttl time.Duration) error {
-	s.cache.Expire(key, ttl)
+	s.cache.Expire(strings.TrimSpace(key), ttl)
 	return nil
 }
 
