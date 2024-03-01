@@ -19,4 +19,12 @@ import "github.com/wasp-project/yazi/pkg/storage"
 type Service interface {
 	Run()
 	SetStorage(s storage.KVStore)
+
+	GetMeta(key string) (string, error)
+	SetMeta(key, value string) error
+	DelMeta(key string) error
+
+	GetRaft(key string) (string, error)
+	SetRaft(key, value string) error
+	DelRaft(key string) error
 }
