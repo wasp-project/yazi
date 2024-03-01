@@ -14,40 +14,9 @@
 
 package server
 
-import (
-	"net"
-)
+import "github.com/wasp-project/yazi/pkg/storage"
 
-type TCPServer struct {
-	Listener net.Listener
-	connCh   chan net.Conn
-	errCh    chan error
-}
-
-func (s *TCPServer) Open(addr string) (net.Conn, error) {
-	var err error
-	if s.Listener, err = net.Listen("tcp", addr); err != nil {
-		return nil, err
-	}
-
-	return nil, nil
-}
-
-func (s *TCPServer) Listen() {
-	for {
-		if s.Listener == nil {
-			break
-		}
-
-		if conn, err := s.Listener.Accept(); err != nil {
-			s.errCh <- err
-			break
-		} else {
-			s.connCh <- conn
-		}
-	}
-}
-
-func (s *TCPServer) Close() error {
-	return s.Listener.Close()
+type Service interface {
+	Run()
+	SetStorage(s storage.KVStore)
 }
