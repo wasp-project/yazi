@@ -16,7 +16,6 @@ package storage
 
 import (
 	"errors"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -25,8 +24,6 @@ import (
 	"github.com/wasp-project/yazi/pkg/policy/lru"
 	"github.com/wasp-project/yazi/pkg/storage/local"
 	"github.com/wasp-project/yazi/pkg/utils"
-
-	"github.com/mlycore/log"
 )
 
 type StorageClass string
@@ -47,13 +44,15 @@ type KVStore interface {
 }
 
 type Store struct {
-	cache Cache
+	cache      Cache
+	persistent PersistentStorage
 }
 
-func NewKVStore(capacity int, p policy.KeyPolicy) *Store {
+func NewKVStore(capacity int, kp policy.KeyPolicy) *Store {
 	s := &Store{}
 
-	switch p {
+	// set key policy
+	switch kp {
 	case policy.KeyPolicyTTL:
 		utils.TODO()
 	case policy.KeyPolicyLRU:
@@ -68,6 +67,21 @@ func NewKVStore(capacity int, p policy.KeyPolicy) *Store {
 			data: map[string]string{},
 			lock: sync.Mutex{},
 		}
+	}
+
+	return s
+}
+
+type PersistentStorage interface {
+	Write(data []byte) (int, error)
+	Read(data []byte) (int, error)
+}
+
+func NewKVStoreWithPersistent(capacity int, kp policy.KeyPolicy, ps PersistentStorage) *Store {
+	s := NewKVStore(capacity, kp)
+
+	if ps != nil {
+		s.persistent = ps
 	}
 
 	return s
@@ -101,66 +115,9 @@ type Persister interface {
 
 var _ Persister = &local.DiskWriter{}
 
-type Manager struct {
-	tasks map[string]func()
-	p     Persister
-	store KVStore
-}
+type PersistentPolicy string
 
-func NewManager() *Manager {
-	return &Manager{
-		tasks: map[string]func(){},
-	}
-}
-
-func (m *Manager) SetPersistenter(p Persister) *Manager {
-	m.p = p
-	return m
-}
-
-func (m *Manager) SetTask(name string, f func()) *Manager {
-	m.tasks[name] = f
-	return m
-}
-
-func (m *Manager) SetStore(s KVStore) *Manager {
-	m.store = s
-	return m
-}
-
-func (m *Manager) Persistent() {
-	ticker := time.NewTicker(10 * time.Second)
-
-	for range ticker.C {
-		{
-			data := m.store.Encode()
-			if n, err := m.p.Write(data); err != nil {
-				log.Warnf("Persistent data error: %s", err)
-			} else {
-				log.Tracef("Persistent data %d bytes", n)
-			}
-		}
-	}
-}
-
-func (m *Manager) Run() {
-	for _, task := range m.tasks {
-		go task()
-	}
-}
-
-var TaskMemoryCheck = func() {
-	ticker := time.NewTicker(1 * time.Second)
-
-	bToMb := func(b uint64) uint64 {
-		return b / 1024 / 1024
-	}
-
-	for range ticker.C {
-		{
-			var m runtime.MemStats
-			runtime.ReadMemStats(&m)
-			log.Tracef("Alloc = %v MiB\tTotalAlloc = %v MiB\tSys = %v MiB\tNumGC = %v", bToMb(m.Alloc), bToMb(m.TotalAlloc), bToMb(m.Sys), m.NumGC)
-		}
-	}
-}
+const (
+	PersistentPolicyAppend    PersistentPolicy = "append"
+	PersistentPolicyScheduled PersistentPolicy = "scheduled"
+)
