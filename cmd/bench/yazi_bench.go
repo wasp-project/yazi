@@ -15,13 +15,14 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"net"
 	"time"
 
 	"github.com/database-mesh/golang-sdk/pkg/random"
 	"github.com/spf13/cobra"
+	"github.com/wasp-project/yazi/pkg/client"
+	"github.com/wasp-project/yazi/pkg/protocol"
 )
 
 var rootCmd = &cobra.Command{
@@ -37,10 +38,19 @@ var rootCmd = &cobra.Command{
 var bulksetCmd = &cobra.Command{
 	Use:   "bulk",
 	Short: "yazibench bulk",
+	Run:   bulksetf,
+}
+var (
+	bulksetf = func(cmd *cobra.Command, args []string) {
+		client, err := client.NewYaziClient(protocol.Protocol(proto))
+		if err != nil {
+			panic(err)
+		}
 
-	Run: func(cmd *cobra.Command, args []string) {
-		conn := connect()
-		defer conn.Close()
+		if err := client.Connect(host, port); err != nil {
+			panic(err)
+		}
+		defer client.Close()
 
 		t := time.NewTicker(1 * time.Second)
 
@@ -59,21 +69,14 @@ var bulksetCmd = &cobra.Command{
 				}
 			default:
 				{
-					if sum <= n {
+					if sum <= number {
 						key := random.StringN(4)
 						value := random.StringN(6)
 
-						req := fmt.Sprintf("+set %s %s;", key, value)
-						_, err := conn.Write([]byte(req))
-						if err != nil {
+						if err := client.Set(key, value); err != nil {
 							panic(err)
 						}
 
-						reader := bufio.NewReader(conn)
-						_, _, err = reader.ReadLine()
-						if err != nil {
-							panic(err)
-						}
 						ite++
 					} else {
 						break FOR
@@ -82,17 +85,23 @@ var bulksetCmd = &cobra.Command{
 			}
 		}
 
-		fmt.Printf("%d keys set\n", n)
-	},
-}
+		fmt.Printf("%d keys set\n", number)
+	}
+)
 
 var (
-	n int
+	number int
+	proto  string
+	host   string
+	port   string
 )
 
 func init() {
+	rootCmd.Flags().StringVarP(&proto, "protocol", "p", "grpc", "client server protocol")
+	rootCmd.Flags().StringVarP(&host, "host", "H", "127.0.0.1", "server host")
+	rootCmd.Flags().StringVarP(&port, "port", "P", "3456", "server port")
 	rootCmd.AddCommand(bulksetCmd)
-	bulksetCmd.Flags().IntVarP(&n, "number", "n", 1024, "batch set size n")
+	bulksetCmd.Flags().IntVarP(&number, "number", "n", 1024, "batch set size n")
 	_ = bulksetCmd.MarkFlagRequired("n")
 }
 
