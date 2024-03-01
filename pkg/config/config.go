@@ -30,7 +30,7 @@ import (
 type ServerConfig struct {
 	Port     int                  `json:"port,omitempty" default:"3456"`
 	Protocol protocol.Protocol    `json:"protocol,omitempty" default:"naive"`
-	Policy   policy.KeyPolicy     `json:"policy,omitempty" default:""`
+	Policy   policy.KeyPolicy     `json:"policy,omitempty" default:"none"`
 	Storage  storage.StorageClass `json:"storage,omitempty" default:"memory"`
 	Capacity int                  `json:"capacity,omitempty" default:"1024"`
 	Loglevel string               `json:"loglevel,omitempty" default:"info"`
