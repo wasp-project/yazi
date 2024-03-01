@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package server
+package naive
 
 import (
 	"net"
@@ -20,8 +20,10 @@ import (
 
 type TCPServer struct {
 	Listener net.Listener
-	connCh   chan net.Conn
-	errCh    chan error
+	port     int
+
+	connCh chan net.Conn
+	errCh  chan error
 }
 
 func (s *TCPServer) Open(addr string) (net.Conn, error) {
