@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"sync"
 	"time"
+
+	"github.com/wasp-project/yazi/pkg/utils"
 )
 
 type Cache interface {
@@ -60,7 +62,7 @@ func (c *memcache) Set(key string, val string) (prev string, replaced bool) {
 }
 
 func (c *memcache) Expire(key string, ttl time.Duration) bool {
-	//TODO: implement
+	utils.TODO()
 	return false
 }
 

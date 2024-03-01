@@ -23,6 +23,7 @@ import (
 	"github.com/wasp-project/yazi/pkg/policy"
 	"github.com/wasp-project/yazi/pkg/policy/lru"
 	"github.com/wasp-project/yazi/pkg/storage/local"
+	"github.com/wasp-project/yazi/pkg/utils"
 
 	"github.com/mlycore/log"
 )
@@ -48,16 +49,12 @@ type Store struct {
 	cache Cache
 }
 
-func TODO() {
-	log.Warnf("Not implemented yet")
-}
-
 func NewKVStore(capacity int, p policy.KeyPolicy) *Store {
 	s := &Store{}
 
 	switch p {
 	case policy.KeyPolicyTTL:
-		TODO()
+		utils.TODO()
 	case policy.KeyPolicyLRU:
 		s.cache = lru.New[string, string](capacity)
 	default:
