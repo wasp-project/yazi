@@ -60,21 +60,41 @@ func (s *Server) Run() {
 	log.Infof("Server is configured with raft port: %d", s.conf.RaftPort)
 	log.Infof("Server is configured with raft node: %s", s.conf.RaftNode)
 
-	// init storage
-	store := storage.NewKVStore(s.conf.Capacity, s.conf.Policy)
-	s.ncore.SetStorage(store)
+	var (
+		store      storage.KVStore
+		persistent storage.PersistentStorage
+	)
 
+	s.manager = storage.NewManager()
+
+	// init storage
+	if len(s.conf.Storage) != 0 {
+		// decide where to persist
+		switch s.conf.Storage {
+		case storage.StorageClassLocal:
+			persistent = local.NewLocalStorage()
+		default:
+			log.Infof("Unsupported storage class")
+		}
+
+		// set persistent data policy
+		// decide how to persist
+		// - Append: will persist by kvstore itself
+		// - Scheduled: will persist by background task
+		switch s.conf.Persistent {
+		case storage.PersistentPolicyAppend:
+			store = storage.NewKVStoreWithPersistent(s.conf.Capacity, s.conf.Policy, persistent)
+		case storage.PersistentPolicyScheduled:
+			store = storage.NewKVStore(s.conf.Capacity, s.conf.Policy)
+			s.manager.SetTask("persistent", s.manager.Persistent)
+		}
+
+		s.manager.SetPersistentStorage(persistent).SetStore(store)
+	}
+
+	s.ncore.SetStorage(store)
 	s.initServerMetadata()
 	s.initRaftMetadata()
-
-	switch s.conf.Storage {
-	case storage.StorageClassLocal:
-		w := local.NewWriter()
-		s.manager = storage.NewManager().SetPersistenter(w).SetStore(store)
-		s.manager.SetTask("persistent", s.manager.Persistent)
-	default:
-		s.manager = storage.NewManager().SetStore(store)
-	}
 
 	s.manager.SetTask("memory-check", storage.TaskMemoryCheck)
 
