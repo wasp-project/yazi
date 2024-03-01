@@ -42,3 +42,38 @@ func (w *DiskWriter) Write(data []byte) (int, error) {
 
 	return f.Write(data)
 }
+
+type DiskReader struct{}
+
+func NewReader() *DiskReader {
+	return &DiskReader{}
+}
+
+func (r *DiskReader) Read(data []byte) (int, error) {
+	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return 0, err
+	}
+
+	return f.Read(data)
+}
+
+type LocalStorage struct {
+	*DiskWriter
+	*DiskReader
+}
+
+func NewLocalStorage() *LocalStorage {
+	return &LocalStorage{
+		DiskWriter: NewWriter(),
+		DiskReader: NewReader(),
+	}
+}
+
+func (s *LocalStorage) Writer() *DiskWriter {
+	return s.DiskWriter
+}
+
+func (s *LocalStorage) Reader() *DiskReader {
+	return s.DiskReader
+}
