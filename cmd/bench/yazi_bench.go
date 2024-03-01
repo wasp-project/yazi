@@ -78,6 +78,12 @@ var (
 						}
 
 						ite++
+						// NOTE: this may not fulfill the expected timer interval
+						// where number is lower than the actual number per seconds,
+						// so no statistics will be printed.
+						if ite >= number {
+							break FOR
+						}
 					} else {
 						break FOR
 					}
