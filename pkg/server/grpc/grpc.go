@@ -21,6 +21,7 @@ import (
 
 	"github.com/wasp-project/yazi/pkg/server/pb"
 	"github.com/wasp-project/yazi/pkg/storage"
+	"github.com/wasp-project/yazi/pkg/utils"
 
 	"github.com/mlycore/log"
 	"google.golang.org/grpc"
@@ -54,8 +55,14 @@ func (s *gr) SetStorage(storage storage.KVStore) {
 	s.store = storage
 }
 
+const (
+	MetadataKeyPrefix = "/_meta"
+	RaftKeyPrefix     = "/_raft"
+	DataKeyPrefix     = "/_data/"
+)
+
 func (s *gr) Set(ctx context.Context, req *pb.KVRequest) (resp *pb.KVResponse, err error) {
-	if err = s.store.Set(req.Key, req.Value); err != nil {
+	if err = s.store.Set(DataKeyPrefix+req.Key, req.Value); err != nil {
 		log.Errorf("Error setting key %s: %s", req.Key, err)
 	}
 
@@ -66,9 +73,36 @@ func (s *gr) Get(ctx context.Context, req *pb.KVRequest) (*pb.KVResponse, error)
 	resp := &pb.KVResponse{}
 	var err error
 
-	if resp.Value, err = s.store.Get(req.Key); err != nil {
+	if resp.Value, err = s.store.Get(DataKeyPrefix + req.Key); err != nil {
 		log.Errorf("Error getting key %s: %s", req.Key, err)
 	}
 
 	return resp, err
+}
+func (s *gr) GetMeta(key string) (string, error) {
+	utils.TODO()
+	return "", nil
+}
+
+func (s *gr) SetMeta(key, value string) error {
+	return s.store.Set(MetadataKeyPrefix+key, value)
+}
+
+func (s *gr) DelMeta(key string) error {
+	utils.TODO()
+	return nil
+}
+
+func (s *gr) GetRaft(key string) (string, error) {
+	utils.TODO()
+	return "", nil
+}
+
+func (s *gr) SetRaft(key, value string) error {
+	return s.store.Set(RaftKeyPrefix+key, value)
+}
+
+func (s *gr) DelRaft(key string) error {
+	utils.TODO()
+	return nil
 }
