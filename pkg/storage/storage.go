@@ -97,6 +97,10 @@ func (s *Store) Get(key string) (string, error) {
 
 func (s *Store) Set(key, value string) error {
 	s.cache.Set(strings.TrimSpace(key), value)
+	if s.persistent != nil {
+		_, err := s.persistent.Write(s.cache.Encode())
+		return err
+	}
 	return nil
 }
 
