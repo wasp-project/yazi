@@ -14,7 +14,11 @@
 
 package lru
 
-import "time"
+import (
+	"time"
+
+	"github.com/wasp-project/yazi/pkg/utils"
+)
 
 type MListNode[K comparable, V any] struct {
 	metadata NodeMeta[K, V]
@@ -118,6 +122,12 @@ func (c *LRUCache[K, V]) Expire(key K, ttl time.Duration) (updated bool) {
 }
 
 func (c *LRUCache[K, V]) Encode() []byte {
+	utils.TODO()
+	return nil
+}
+
+func (c *LRUCache[K, V]) Decode(data []byte) error {
+	utils.TODO()
 	return nil
 }
 
