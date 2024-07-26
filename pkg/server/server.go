@@ -89,7 +89,7 @@ func (s *Server) Run() {
 			s.manager.SetTask("persistent", s.manager.Persistent)
 		}
 
-		s.manager.SetPersistentStorage(persistent).SetStore(store)
+		s.manager.SetPersistentStorage(persistent).SetStore(store).Load()
 	}
 
 	s.ncore.SetStorage(store)
