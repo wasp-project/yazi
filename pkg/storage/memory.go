@@ -16,6 +16,7 @@ package storage
 
 import (
 	"encoding/json"
+	"strings"
 	"sync"
 	"time"
 
@@ -28,6 +29,7 @@ type Cache interface {
 	Expire(key string, ttl time.Duration) (updated bool)
 
 	Encode() []byte
+	Decode([]byte) error
 }
 
 type memcache struct {
@@ -71,4 +73,13 @@ func (c *memcache) Encode() []byte {
 	defer c.lock.Unlock()
 	d, _ := json.Marshal(c.data)
 	return d
+}
+
+func (c *memcache) Decode(data []byte) error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	// FIXME: the data loaded from file will contains invisible char "\x00"
+	// they are replaced by the line below temporarily
+	data = []byte(strings.ReplaceAll(string(data), "\x00", ""))
+	return json.Unmarshal(data, &c.data)
 }
