@@ -41,6 +41,7 @@ type KVStore interface {
 	Expire(key string, ttl time.Duration) error
 
 	Encode() []byte
+	Decode([]byte) error
 }
 
 type Store struct {
@@ -113,6 +114,10 @@ func (s *Store) Encode() []byte {
 	return s.cache.Encode()
 }
 
+func (s *Store) Decode(data []byte) error {
+	return s.cache.Decode(data)
+}
+
 type Persister interface {
 	Write(data []byte) (int, error)
 }
@@ -125,3 +130,9 @@ const (
 	PersistentPolicyAppend    PersistentPolicy = "append"
 	PersistentPolicyScheduled PersistentPolicy = "scheduled"
 )
+
+type Loader interface {
+	Read([]byte) (int, error)
+}
+
+var _ Loader = &local.DiskReader{}

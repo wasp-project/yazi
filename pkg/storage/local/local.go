@@ -50,7 +50,7 @@ func NewReader() *DiskReader {
 }
 
 func (r *DiskReader) Read(data []byte) (int, error) {
-	f, err := os.OpenFile(file, os.O_CREATE|os.O_WRONLY, 0644)
+	f, err := os.OpenFile(file, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		return 0, err
 	}

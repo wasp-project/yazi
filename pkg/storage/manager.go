@@ -71,6 +71,18 @@ func (m *Manager) Run() {
 	}
 }
 
+func (m *Manager) Load() {
+	var data = []byte{}
+	// Make 10M for data read from file
+	data = make([]byte, 10*1024*1024*1024)
+	if n, err := m.p.Read(data); err != nil {
+		log.Warnf("Persistent load data error: %s", err)
+	} else {
+		log.Tracef("Persistent load data %d bytes", n)
+	}
+	m.store.Decode(data)
+}
+
 var TaskMemoryCheck = func() {
 	ticker := time.NewTicker(1 * time.Second)
 
