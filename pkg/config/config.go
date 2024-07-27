@@ -38,6 +38,14 @@ type ServerConfig struct {
 	Loglevel        string                   `json:"loglevel,omitempty" default:"info"`
 	RaftPort        int                      `json:"raftPort,omitempty"`
 	RaftNode        string                   `json:"raftNode,omitempty"`
+	Experimental    ExperimentalConfig       `json:"experimental,omitempty"`
+}
+
+type ExperimentalConfig struct {
+	RaftPort int    `json:"raftPort,omitempty" yaml:"raftPort"`
+	RaftNode string `json:"raftNode,omitempty" yaml:"raftNode"`
+	Capacity int    `json:"capacity,omitempty" default:"1024"`
+	Buffer   int    `json:"buffer,omitempty" default:"1024"`
 }
 
 func Default() *ServerConfig {
