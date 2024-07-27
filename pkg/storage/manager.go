@@ -22,9 +22,10 @@ import (
 )
 
 type Manager struct {
-	tasks map[string]func()
-	p     PersistentStorage
-	store KVStore
+	tasks  map[string]func()
+	p      PersistentStorage
+	config PersistentConfig
+	store  KVStore
 }
 
 func NewManager() *Manager {
@@ -40,6 +41,11 @@ func (m *Manager) SetPersistentStorage(ps PersistentStorage) *Manager {
 	return m
 }
 
+func (m *Manager) SetPersistentConfig(conf *PersistentConfig) *Manager {
+	m.config = *conf
+	return m
+}
+
 func (m *Manager) SetTask(name string, f func()) *Manager {
 	m.tasks[name] = f
 	return m
@@ -51,7 +57,7 @@ func (m *Manager) SetStore(s KVStore) *Manager {
 }
 
 func (m *Manager) Persistent() {
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(time.Duration(m.config.ScheduledPeriod) * time.Second)
 
 	for range ticker.C {
 		{
@@ -74,13 +80,17 @@ func (m *Manager) Run() {
 func (m *Manager) Load() {
 	var data = []byte{}
 	// Make 10M for data read from file
-	data = make([]byte, 10*1024*1024*1024)
+	data = make([]byte, 10*1024*1024)
 	if n, err := m.p.Read(data); err != nil {
 		log.Warnf("Persistent load data error: %s", err)
 	} else {
 		log.Tracef("Persistent load data %d bytes", n)
 	}
 	m.store.Decode(data)
+}
+
+type PersistentConfig struct {
+	ScheduledPeriod int
 }
 
 var TaskMemoryCheck = func() {

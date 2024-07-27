@@ -28,15 +28,16 @@ import (
 )
 
 type ServerConfig struct {
-	Port       int                      `json:"port,omitempty" default:"3456"`
-	Protocol   protocol.Protocol        `json:"protocol,omitempty" default:"naive"`
-	Policy     policy.KeyPolicy         `json:"policy,omitempty" default:"none"`
-	Storage    storage.StorageClass     `json:"storage,omitempty" default:"memory"`
-	Persistent storage.PersistentPolicy `json:"persistent,omitempty" default:"append"`
-	Capacity   int                      `json:"capacity,omitempty" default:"1024"`
-	Loglevel   string                   `json:"loglevel,omitempty" default:"info"`
-	RaftPort   int                      `json:"raftPort,omitempty"`
-	RaftNode   string                   `json:"raftNode,omitempty"`
+	Port            int                      `json:"port,omitempty" default:"3456"`
+	Protocol        protocol.Protocol        `json:"protocol,omitempty" default:"naive"`
+	Policy          policy.KeyPolicy         `json:"policy,omitempty" default:"none"`
+	Storage         storage.StorageClass     `json:"storage,omitempty" default:"memory"`
+	Persistent      storage.PersistentPolicy `json:"persistent,omitempty" default:"append"`
+	ScheduledPeriod int                      `json:"scheduledPeriod,omitempty" yaml:"scheduledPeriod" default:"10"`
+	Capacity        int                      `json:"capacity,omitempty" default:"1024"`
+	Loglevel        string                   `json:"loglevel,omitempty" default:"info"`
+	RaftPort        int                      `json:"raftPort,omitempty"`
+	RaftNode        string                   `json:"raftNode,omitempty"`
 }
 
 func Default() *ServerConfig {
@@ -61,6 +62,9 @@ func Default() *ServerConfig {
 				conf.Loglevel = tag
 			case "Persistent":
 				conf.Persistent = storage.PersistentPolicy(tag)
+			case "ScheduledPeriod":
+				sp, _ := strconv.ParseInt(tag, 10, 64)
+				conf.ScheduledPeriod = int(sp)
 			}
 		}
 	}
