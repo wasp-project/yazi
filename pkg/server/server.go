@@ -86,6 +86,7 @@ func (s *Server) Run() {
 			store = storage.NewKVStoreWithPersistent(s.conf.Capacity, s.conf.Policy, persistent)
 		case storage.PersistentPolicyScheduled:
 			store = storage.NewKVStore(s.conf.Capacity, s.conf.Policy)
+			s.manager.SetPersistentConfig(&storage.PersistentConfig{ScheduledPeriod: s.conf.ScheduledPeriod})
 			s.manager.SetTask("persistent", s.manager.Persistent)
 		}
 
