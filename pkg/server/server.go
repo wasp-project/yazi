@@ -81,12 +81,17 @@ func (s *Server) Run() {
 		// decide how to persist
 		// - Append: will persist by kvstore itself
 		// - Scheduled: will persist by background task
+
+		// FIXME: adjust sematics
 		switch s.conf.Persistent {
 		case storage.PersistentPolicyAppend:
 			store = storage.NewKVStoreWithPersistent(s.conf.Capacity, s.conf.Policy, persistent)
 		case storage.PersistentPolicyScheduled:
-			store = storage.NewKVStore(s.conf.Capacity, s.conf.Policy)
-			s.manager.SetPersistentConfig(&storage.PersistentConfig{ScheduledPeriod: s.conf.ScheduledPeriod})
+			store = storage.NewExperimentalKVStore(s.conf.Experimental.Buffer, s.conf.Capacity, s.conf.Policy)
+			s.manager.SetPersistentConfig(&storage.PersistentConfig{
+				ScheduledPeriod:   s.conf.ScheduledPeriod,
+				BufferInKiloBytes: s.conf.Experimental.Buffer,
+			})
 			s.manager.SetTask("persistent", s.manager.Persistent)
 		}
 

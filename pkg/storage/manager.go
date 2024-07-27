@@ -79,8 +79,8 @@ func (m *Manager) Run() {
 
 func (m *Manager) Load() {
 	var data = []byte{}
-	// Make 10M for data read from file
-	data = make([]byte, 10*1024*1024)
+
+	data = make([]byte, m.config.BufferInKiloBytes*1024)
 	if n, err := m.p.Read(data); err != nil {
 		log.Warnf("Persistent load data error: %s", err)
 	} else {
@@ -90,7 +90,8 @@ func (m *Manager) Load() {
 }
 
 type PersistentConfig struct {
-	ScheduledPeriod int
+	ScheduledPeriod   int
+	BufferInKiloBytes int
 }
 
 var TaskMemoryCheck = func() {

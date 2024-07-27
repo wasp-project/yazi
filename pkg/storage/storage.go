@@ -50,6 +50,9 @@ type Store struct {
 }
 
 func NewKVStore(capacity int, kp policy.KeyPolicy) *Store {
+	return newKVStore(2048, capacity, kp)
+}
+func newKVStore(buffer, capacity int, kp policy.KeyPolicy) *Store {
 	s := &Store{}
 
 	// set key policy
@@ -63,7 +66,7 @@ func NewKVStore(capacity int, kp policy.KeyPolicy) *Store {
 			metadata: cachemeta{
 				capacity:  capacity,
 				size:      0,
-				maxmemory: 2048,
+				maxmemory: buffer,
 			},
 			data: map[string]string{},
 			lock: sync.Mutex{},
@@ -71,6 +74,10 @@ func NewKVStore(capacity int, kp policy.KeyPolicy) *Store {
 	}
 
 	return s
+}
+
+func NewExperimentalKVStore(buffer, capacity int, kp policy.KeyPolicy) *Store {
+	return newKVStore(buffer, capacity, kp)
 }
 
 type PersistentStorage interface {
