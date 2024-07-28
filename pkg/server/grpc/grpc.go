@@ -79,6 +79,17 @@ func (s *gr) Get(ctx context.Context, req *pb.KVRequest) (*pb.KVResponse, error)
 
 	return resp, err
 }
+
+func (s *gr) Del(ctx context.Context, req *pb.KVRequest) (*pb.KVResponse, error) {
+	resp := &pb.KVResponse{}
+	var err error
+
+	if err = s.store.Del(DataKeyPrefix + req.Key); err != nil {
+		log.Errorf("Error deleting key %s: %s", req.Key, err)
+	}
+	return resp, err
+}
+
 func (s *gr) GetMeta(key string) (string, error) {
 	utils.TODO()
 	return "", nil
