@@ -122,22 +122,41 @@ func (s *Store) Expire(key string, ttl time.Duration) error {
 }
 
 func (s *Store) Del(key string) error {
-	utils.TODO()
+	s.cache.Del(strings.TrimSpace(key))
+	if s.persistent != nil {
+		_, err := s.persistent.Write(s.cache.Encode())
+		return err
+	}
 	return nil
 }
 
 func (s *Store) MSet(keys, values []string) error {
-	utils.TODO()
+	nkeys := make([]string, len(keys))
+	nvals := make([]string, len(keys))
+	for i := range keys {
+		nkeys[i] = strings.TrimSpace(keys[i])
+		nvals[i] = strings.TrimSpace(values[i])
+	}
+	s.cache.MSet(keys, values)
+	if s.persistent != nil {
+		_, err := s.persistent.Write(s.cache.Encode())
+		return err
+	}
 	return nil
 }
 
 func (s *Store) MGet(keys []string) ([]string, error) {
-	utils.TODO()
-	return []string{}, nil
+	nkeys := make([]string, len(keys))
+	for i := range keys {
+		nkeys[i] = strings.TrimSpace(keys[i])
+	}
+	values, _ := s.cache.MGet(keys)
+	return values, nil
 }
+
 func (s *Store) Keys() ([]string, error) {
-	utils.TODO()
-	return []string{}, nil
+	keys := s.cache.Keys()
+	return keys, nil
 }
 
 func (s *Store) Encode() []byte {
