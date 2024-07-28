@@ -46,6 +46,31 @@ var (
 		Run:   setf,
 	}
 
+	delCmd = &cobra.Command{
+		Use:   "del",
+		Short: "yazictl del <key>",
+		Run:   delf,
+	}
+
+	mgetCmd = &cobra.Command{
+		Use:   "mget",
+		Short: "yazictl mget <key1> <key2>...",
+		Run:   mgetf,
+	}
+
+	msetCmd = &cobra.Command{
+		Use: "mset",
+		// TODO: this doesn't make sense. Need to be redesigned
+		Short: "yazictl mset <key1> <key2>... <value1> <value2>...",
+		Run:   msetf,
+	}
+
+	keysCmd = &cobra.Command{
+		Use:   "keys",
+		Short: "yazictl keys",
+		Run:   keysf,
+	}
+
 	expireCmd = &cobra.Command{
 		Use:   "expire",
 		Short: "yazictl expire <key> <ttl>",
@@ -94,17 +119,95 @@ var (
 		}
 	}
 
+	delf = func(cmd *cobra.Command, args []string) {
+		client, err := client.NewYaziClient(protocol.Protocol(proto))
+		if err != nil {
+			panic(err)
+		}
+
+		if err := client.Connect(host, port); err != nil {
+			panic(err)
+		}
+		defer client.Close()
+
+		key = args[0]
+
+		if err := client.Del(key); err != nil {
+			panic(err)
+		}
+	}
+
+	mgetf = func(cmd *cobra.Command, args []string) {
+		client, err := client.NewYaziClient(protocol.Protocol(proto))
+		if err != nil {
+			panic(err)
+		}
+
+		if err := client.Connect(host, port); err != nil {
+			panic(err)
+		}
+		defer client.Close()
+
+		keys = args
+
+		if val, err := client.MGet(keys); err != nil {
+			panic(err)
+		} else {
+			fmt.Printf("%v", val)
+		}
+	}
+
+	msetf = func(cmd *cobra.Command, args []string) {
+		client, err := client.NewYaziClient(protocol.Protocol(proto))
+		if err != nil {
+			panic(err)
+		}
+
+		if err := client.Connect(host, port); err != nil {
+			panic(err)
+		}
+		defer client.Close()
+
+		n := len(args)
+		keys = args[:n/2-1]
+		values = args[n/2:]
+
+		if err := client.MSet(keys, values); err != nil {
+			panic(err)
+		}
+	}
+
+	keysf = func(cmd *cobra.Command, args []string) {
+		client, err := client.NewYaziClient(protocol.Protocol(proto))
+		if err != nil {
+			panic(err)
+		}
+
+		if err := client.Connect(host, port); err != nil {
+			panic(err)
+		}
+		defer client.Close()
+
+		if val, err := client.Keys(); err != nil {
+			panic(err)
+		} else {
+			fmt.Printf("%v", val)
+		}
+	}
+
 	expiref = func(cmd *cobra.Command, args []string) {
 
 	}
 )
 
 var (
-	key   string
-	value string
-	proto string
-	port  string
-	host  string
+	key    string
+	value  string
+	keys   []string
+	values []string
+	proto  string
+	port   string
+	host   string
 )
 
 func init() {
@@ -113,6 +216,10 @@ func init() {
 	rootCmd.Flags().StringVarP(&port, "port", "P", "3456", "server port")
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(setCmd)
+	rootCmd.AddCommand(delCmd)
+	rootCmd.AddCommand(msetCmd)
+	rootCmd.AddCommand(mgetCmd)
+	rootCmd.AddCommand(keysCmd)
 	rootCmd.AddCommand(expireCmd)
 }
 
