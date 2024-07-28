@@ -153,3 +153,21 @@ func (c *LRUCache[K, V]) Remove(p *MListNode[K, V]) {
 	p.metadata.prev.metadata.next = p.metadata.next
 	p.metadata.next.metadata.prev = p.metadata.prev
 }
+
+func (c *LRUCache[K, V]) Del(key K) bool {
+	utils.TODO()
+	return false
+}
+
+func (c *LRUCache[K, V]) MGet(key []K) ([]V, []bool) {
+	utils.TODO()
+	return []V{}, nil
+}
+func (c *LRUCache[K, V]) MSet(key []K, val []V) ([]V, []bool) {
+	utils.TODO()
+	return []V{}, []bool{}
+}
+func (c *LRUCache[K, V]) Keys() []V {
+	utils.TODO()
+	return []V{}
+}
