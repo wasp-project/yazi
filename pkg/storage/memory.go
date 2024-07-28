@@ -26,6 +26,12 @@ import (
 type Cache interface {
 	Get(key string) (val string, gotten bool)
 	Set(key, val string) (prev string, replaced bool)
+	// NOTE: the key isn't exist will return false
+	// the key was existed and is deleted will return true
+	Del(key string) (deleted bool)
+	MSet(keys, vals []string) (prev []string, replaced []bool)
+	MGet(keys []string) (vals []string, gotten []bool)
+	Keys() (vals []string)
 	Expire(key string, ttl time.Duration) (updated bool)
 
 	Encode() []byte
@@ -61,6 +67,52 @@ func (c *memcache) Set(key string, val string) (prev string, replaced bool) {
 	prev, replaced = c.data[key]
 	c.data[key] = val
 	return prev, replaced
+}
+
+func (c *memcache) Del(key string) bool {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	_, found := c.data[key]
+	delete(c.data, key)
+	return found
+}
+
+func (c *memcache) MSet(keys []string, vals []string) ([]string, []bool) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	prev := make([]string, len(keys))
+	replaced := make([]bool, len(keys))
+
+	for id, _ := range keys {
+		prev[id], replaced[id] = c.data[keys[id]]
+		c.data[keys[id]] = vals[id]
+	}
+
+	return prev, replaced
+}
+
+func (c *memcache) MGet(keys []string) ([]string, []bool) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	vals := make([]string, len(keys))
+	gotten := make([]bool, len(keys))
+	for id, _ := range keys {
+		if v, ok := c.data[keys[id]]; ok {
+			gotten[id] = true
+			vals[id] = v
+		}
+	}
+	return vals, gotten
+}
+
+func (c *memcache) Keys() []string {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	keys := []string{}
+	for k, _ := range c.data {
+		keys = append(keys, k)
+	}
+	return keys
 }
 
 func (c *memcache) Expire(key string, ttl time.Duration) bool {
