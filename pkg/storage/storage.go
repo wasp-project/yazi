@@ -39,6 +39,10 @@ type KVStore interface {
 	Get(key string) (string, error)
 	Set(key, val string) error
 	Expire(key string, ttl time.Duration) error
+	Del(key string) error
+	MSet(keys, values []string) error
+	MGet(keys []string) ([]string, error)
+	Keys() ([]string, error)
 
 	Encode() []byte
 	Decode([]byte) error
@@ -115,6 +119,25 @@ func (s *Store) Set(key, value string) error {
 func (s *Store) Expire(key string, ttl time.Duration) error {
 	s.cache.Expire(strings.TrimSpace(key), ttl)
 	return nil
+}
+
+func (s *Store) Del(key string) error {
+	utils.TODO()
+	return nil
+}
+
+func (s *Store) MSet(keys, values []string) error {
+	utils.TODO()
+	return nil
+}
+
+func (s *Store) MGet(keys []string) ([]string, error) {
+	utils.TODO()
+	return []string{}, nil
+}
+func (s *Store) Keys() ([]string, error) {
+	utils.TODO()
+	return []string{}, nil
 }
 
 func (s *Store) Encode() []byte {
