@@ -24,6 +24,7 @@ import (
 
 	"github.com/wasp-project/yazi/pkg/protocol"
 	"github.com/wasp-project/yazi/pkg/server/pb"
+	"github.com/wasp-project/yazi/pkg/utils"
 	"google.golang.org/grpc"
 )
 
@@ -43,6 +44,10 @@ type Client interface {
 	Connect(host, port string) error
 	Get(key string) (string, error)
 	Set(key, value string) error
+	Del(key string) error
+	MGet(keys []string) ([]string, error)
+	MSet(keys, values []string) error
+	Keys() ([]string, error)
 	Close() error
 }
 
@@ -94,6 +99,23 @@ func (c *naiveclient) Set(key, value string) error {
 	return nil
 }
 
+func (c *naiveclient) Del(key string) error {
+	utils.TODO()
+	return nil
+}
+func (c *naiveclient) MSet(keys, values []string) error {
+	utils.TODO()
+	return nil
+}
+func (c *naiveclient) MGet(keys []string) ([]string, error) {
+	utils.TODO()
+	return []string{}, nil
+}
+func (c *naiveclient) Keys() ([]string, error) {
+	utils.TODO()
+	return []string{}, nil
+}
+
 type grpcclient struct {
 	conn *grpc.ClientConn
 }
@@ -131,4 +153,46 @@ func (c *grpcclient) Set(key, value string) error {
 	defer cancel()
 	_, err := cli.Set(ctx, &pb.KVRequest{Key: key, Value: value})
 	return err
+}
+
+func (c *grpcclient) Del(key string) error {
+	cli := pb.NewRPCServerClient(c.conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	_, err := cli.Del(ctx, &pb.KVRequest{Key: key})
+	return err
+}
+
+func (c *grpcclient) MGet(keys []string) ([]string, error) {
+	cli := pb.NewRPCServerClient(c.conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	resp, err := cli.MGet(ctx, &pb.MKVRequest{Keys: keys})
+	if err != nil {
+		return []string{}, err
+	}
+	return resp.Values, nil
+}
+
+func (c *grpcclient) MSet(keys, values []string) error {
+	cli := pb.NewRPCServerClient(c.conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	_, err := cli.MSet(ctx, &pb.MKVRequest{Keys: keys, Values: values})
+	return err
+}
+
+func (c *grpcclient) Keys() ([]string, error) {
+	cli := pb.NewRPCServerClient(c.conn)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	resp, err := cli.Keys(ctx, &pb.MKVRequest{})
+	if err != nil {
+		return []string{}, err
+	}
+	return resp.Values, nil
 }

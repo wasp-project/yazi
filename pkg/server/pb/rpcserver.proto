@@ -20,6 +20,10 @@ option go_package = "github.com/wasp-project/yazi/pkg/server/pb";
 service RPCServer {
   rpc Set(KVRequest) returns (KVResponse) {}
   rpc Get(KVRequest) returns (KVResponse) {} 
+  rpc Del(KVRequest) returns (KVResponse) {}
+  rpc Keys(MKVRequest) returns (MKVResponse) {}
+  rpc MGet(MKVRequest) returns (MKVResponse) {}
+  rpc MSet(MKVRequest) returns (MKVResponse) {}
 }
 
 message KVRequest {
@@ -29,4 +33,13 @@ message KVRequest {
 
 message KVResponse {
   string value = 1;
+}
+
+message MKVRequest {
+  repeated string keys = 1;
+  repeated string values = 2;
+}
+
+message MKVResponse {
+  repeated string values = 1;
 }
