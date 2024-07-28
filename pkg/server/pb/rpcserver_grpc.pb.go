@@ -33,8 +33,12 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	RPCServer_Set_FullMethodName = "/pb.RPCServer/Set"
-	RPCServer_Get_FullMethodName = "/pb.RPCServer/Get"
+	RPCServer_Set_FullMethodName  = "/pb.RPCServer/Set"
+	RPCServer_Get_FullMethodName  = "/pb.RPCServer/Get"
+	RPCServer_Del_FullMethodName  = "/pb.RPCServer/Del"
+	RPCServer_Keys_FullMethodName = "/pb.RPCServer/Keys"
+	RPCServer_MGet_FullMethodName = "/pb.RPCServer/MGet"
+	RPCServer_MSet_FullMethodName = "/pb.RPCServer/MSet"
 )
 
 // RPCServerClient is the client API for RPCServer service.
@@ -43,6 +47,10 @@ const (
 type RPCServerClient interface {
 	Set(ctx context.Context, in *KVRequest, opts ...grpc.CallOption) (*KVResponse, error)
 	Get(ctx context.Context, in *KVRequest, opts ...grpc.CallOption) (*KVResponse, error)
+	Del(ctx context.Context, in *KVRequest, opts ...grpc.CallOption) (*KVResponse, error)
+	Keys(ctx context.Context, in *MKVRequest, opts ...grpc.CallOption) (*MKVResponse, error)
+	MGet(ctx context.Context, in *MKVRequest, opts ...grpc.CallOption) (*MKVResponse, error)
+	MSet(ctx context.Context, in *MKVRequest, opts ...grpc.CallOption) (*MKVResponse, error)
 }
 
 type rPCServerClient struct {
@@ -71,12 +79,52 @@ func (c *rPCServerClient) Get(ctx context.Context, in *KVRequest, opts ...grpc.C
 	return out, nil
 }
 
+func (c *rPCServerClient) Del(ctx context.Context, in *KVRequest, opts ...grpc.CallOption) (*KVResponse, error) {
+	out := new(KVResponse)
+	err := c.cc.Invoke(ctx, RPCServer_Del_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rPCServerClient) Keys(ctx context.Context, in *MKVRequest, opts ...grpc.CallOption) (*MKVResponse, error) {
+	out := new(MKVResponse)
+	err := c.cc.Invoke(ctx, RPCServer_Keys_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rPCServerClient) MGet(ctx context.Context, in *MKVRequest, opts ...grpc.CallOption) (*MKVResponse, error) {
+	out := new(MKVResponse)
+	err := c.cc.Invoke(ctx, RPCServer_MGet_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *rPCServerClient) MSet(ctx context.Context, in *MKVRequest, opts ...grpc.CallOption) (*MKVResponse, error) {
+	out := new(MKVResponse)
+	err := c.cc.Invoke(ctx, RPCServer_MSet_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RPCServerServer is the server API for RPCServer service.
 // All implementations must embed UnimplementedRPCServerServer
 // for forward compatibility
 type RPCServerServer interface {
 	Set(context.Context, *KVRequest) (*KVResponse, error)
 	Get(context.Context, *KVRequest) (*KVResponse, error)
+	Del(context.Context, *KVRequest) (*KVResponse, error)
+	Keys(context.Context, *MKVRequest) (*MKVResponse, error)
+	MGet(context.Context, *MKVRequest) (*MKVResponse, error)
+	MSet(context.Context, *MKVRequest) (*MKVResponse, error)
 	mustEmbedUnimplementedRPCServerServer()
 }
 
@@ -89,6 +137,18 @@ func (UnimplementedRPCServerServer) Set(context.Context, *KVRequest) (*KVRespons
 }
 func (UnimplementedRPCServerServer) Get(context.Context, *KVRequest) (*KVResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedRPCServerServer) Del(context.Context, *KVRequest) (*KVResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Del not implemented")
+}
+func (UnimplementedRPCServerServer) Keys(context.Context, *MKVRequest) (*MKVResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Keys not implemented")
+}
+func (UnimplementedRPCServerServer) MGet(context.Context, *MKVRequest) (*MKVResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MGet not implemented")
+}
+func (UnimplementedRPCServerServer) MSet(context.Context, *MKVRequest) (*MKVResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MSet not implemented")
 }
 func (UnimplementedRPCServerServer) mustEmbedUnimplementedRPCServerServer() {}
 
@@ -139,6 +199,78 @@ func _RPCServer_Get_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RPCServer_Del_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KVRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RPCServerServer).Del(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RPCServer_Del_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RPCServerServer).Del(ctx, req.(*KVRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RPCServer_Keys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MKVRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RPCServerServer).Keys(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RPCServer_Keys_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RPCServerServer).Keys(ctx, req.(*MKVRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RPCServer_MGet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MKVRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RPCServerServer).MGet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RPCServer_MGet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RPCServerServer).MGet(ctx, req.(*MKVRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _RPCServer_MSet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MKVRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RPCServerServer).MSet(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: RPCServer_MSet_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RPCServerServer).MSet(ctx, req.(*MKVRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RPCServer_ServiceDesc is the grpc.ServiceDesc for RPCServer service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -153,6 +285,22 @@ var RPCServer_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Get",
 			Handler:    _RPCServer_Get_Handler,
+		},
+		{
+			MethodName: "Del",
+			Handler:    _RPCServer_Del_Handler,
+		},
+		{
+			MethodName: "Keys",
+			Handler:    _RPCServer_Keys_Handler,
+		},
+		{
+			MethodName: "MGet",
+			Handler:    _RPCServer_MGet_Handler,
+		},
+		{
+			MethodName: "MSet",
+			Handler:    _RPCServer_MSet_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
