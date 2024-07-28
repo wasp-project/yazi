@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 
 	"github.com/wasp-project/yazi/pkg/server/pb"
 	"github.com/wasp-project/yazi/pkg/storage"
@@ -87,6 +88,54 @@ func (s *gr) Del(ctx context.Context, req *pb.KVRequest) (*pb.KVResponse, error)
 	if err = s.store.Del(DataKeyPrefix + req.Key); err != nil {
 		log.Errorf("Error deleting key %s: %s", req.Key, err)
 	}
+	return resp, err
+}
+
+func (s *gr) MSet(ctx context.Context, req *pb.MKVRequest) (*pb.MKVResponse, error) {
+	var (
+		err   error
+		nkeys []string        = make([]string, len(req.Keys))
+		resp  *pb.MKVResponse = &pb.MKVResponse{}
+	)
+	for i := 0; i < len(req.Keys); i++ {
+		nkeys[i] = MetadataKeyPrefix + req.Keys[i]
+	}
+	if err = s.store.MSet(nkeys, req.Values); err != nil {
+		log.Errorf("Error mset %d keys: %s", len(req.Keys), err)
+	}
+	return resp, err
+}
+
+func (s *gr) MGet(ctx context.Context, req *pb.MKVRequest) (*pb.MKVResponse, error) {
+	var (
+		err   error
+		nkeys []string        = make([]string, len(req.Keys))
+		resp  *pb.MKVResponse = &pb.MKVResponse{}
+	)
+	for i := 0; i < len(req.Keys); i++ {
+		nkeys[i] = MetadataKeyPrefix + req.Keys[i]
+	}
+	if resp.Values, err = s.store.MGet(nkeys); err != nil {
+		log.Errorf("Error mget %d keys: %s", len(req.Keys), err)
+	}
+	return resp, err
+}
+
+func (s *gr) Keys(ctx context.Context, req *pb.MKVRequest) (*pb.MKVResponse, error) {
+	var (
+		err  error
+		keys []string
+		resp *pb.MKVResponse = &pb.MKVResponse{}
+	)
+
+	if keys, err = s.store.Keys(); err != nil {
+		log.Errorf("Error keys: %s", err)
+	}
+	resp.Values = make([]string, len(keys))
+	for i := 0; i < len(keys); i++ {
+		resp.Values[i] = strings.TrimPrefix(keys[i], MetadataKeyPrefix)
+	}
+
 	return resp, err
 }
 
