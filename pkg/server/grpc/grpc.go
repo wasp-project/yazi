@@ -98,7 +98,7 @@ func (s *gr) MSet(ctx context.Context, req *pb.MKVRequest) (*pb.MKVResponse, err
 		resp  *pb.MKVResponse = &pb.MKVResponse{}
 	)
 	for i := 0; i < len(req.Keys); i++ {
-		nkeys[i] = MetadataKeyPrefix + req.Keys[i]
+		nkeys[i] = DataKeyPrefix + req.Keys[i]
 	}
 	if err = s.store.MSet(nkeys, req.Values); err != nil {
 		log.Errorf("Error mset %d keys: %s", len(req.Keys), err)
@@ -113,7 +113,7 @@ func (s *gr) MGet(ctx context.Context, req *pb.MKVRequest) (*pb.MKVResponse, err
 		resp  *pb.MKVResponse = &pb.MKVResponse{}
 	)
 	for i := 0; i < len(req.Keys); i++ {
-		nkeys[i] = MetadataKeyPrefix + req.Keys[i]
+		nkeys[i] = DataKeyPrefix + req.Keys[i]
 	}
 	if resp.Values, err = s.store.MGet(nkeys); err != nil {
 		log.Errorf("Error mget %d keys: %s", len(req.Keys), err)
@@ -133,7 +133,7 @@ func (s *gr) Keys(ctx context.Context, req *pb.MKVRequest) (*pb.MKVResponse, err
 	}
 	resp.Values = make([]string, len(keys))
 	for i := 0; i < len(keys); i++ {
-		resp.Values[i] = strings.TrimPrefix(keys[i], MetadataKeyPrefix)
+		resp.Values[i] = strings.TrimPrefix(keys[i], DataKeyPrefix)
 	}
 
 	return resp, err
