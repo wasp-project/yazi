@@ -20,6 +20,7 @@ import (
 	"github.com/wasp-project/yazi/pkg/config"
 	"github.com/wasp-project/yazi/pkg/protocol"
 	"github.com/wasp-project/yazi/pkg/protocol/naive"
+	"github.com/wasp-project/yazi/pkg/replication"
 	sg "github.com/wasp-project/yazi/pkg/server/grpc"
 	sn "github.com/wasp-project/yazi/pkg/server/naive"
 	"github.com/wasp-project/yazi/pkg/storage"
@@ -102,6 +103,10 @@ func (s *Server) Run() {
 		}
 
 		s.manager.SetPersistentStorage(persistent).SetStore(store).Load()
+	}
+
+	if s.conf.Replication.Enabled && store != nil {
+		store = replication.NewReplicatedStore(store, s.conf.Replication)
 	}
 
 	s.ncore.SetStorage(store)
