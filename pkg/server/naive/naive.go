@@ -18,11 +18,10 @@ import (
 	"bufio"
 	"net"
 	"strconv"
-	"time"
 
 	cn "github.com/wasp-project/yazi/pkg/protocol/naive"
+	"github.com/wasp-project/yazi/pkg/server/grpc"
 	"github.com/wasp-project/yazi/pkg/storage"
-	"github.com/wasp-project/yazi/pkg/utils"
 
 	"github.com/mlycore/log"
 )
@@ -69,10 +68,6 @@ func (s *naive) listenAndServe() error {
 		case err = <-s.core.errCh:
 			log.Errorf("Listening error: %s", err)
 			return err
-		// FIXME: remove after the server is running good
-		default:
-			time.Sleep(time.Second)
-			log.Infof("Waiting for connection...")
 		}
 	}
 }
@@ -137,31 +132,25 @@ func (s *naive) handle(conn net.Conn) error {
 }
 
 func (s *naive) GetMeta(key string) (string, error) {
-	utils.TODO()
-	return "", nil
+	return s.store.Get(grpc.MetadataKeyPrefix + key)
 }
 
 func (s *naive) SetMeta(key, value string) error {
-	utils.TODO()
-	return nil
+	return s.store.Set(grpc.MetadataKeyPrefix+key, value)
 }
 
 func (s *naive) DelMeta(key string) error {
-	utils.TODO()
-	return nil
+	return s.store.Del(grpc.MetadataKeyPrefix + key)
 }
 
 func (s *naive) GetRaft(key string) (string, error) {
-	utils.TODO()
-	return "", nil
+	return s.store.Get(grpc.RaftKeyPrefix + key)
 }
 
 func (s *naive) SetRaft(key, value string) error {
-	utils.TODO()
-	return nil
+	return s.store.Set(grpc.RaftKeyPrefix+key, value)
 }
 
 func (s *naive) DelRaft(key string) error {
-	utils.TODO()
-	return nil
+	return s.store.Del(grpc.RaftKeyPrefix + key)
 }
