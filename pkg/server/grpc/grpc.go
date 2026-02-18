@@ -22,7 +22,6 @@ import (
 
 	"github.com/wasp-project/yazi/pkg/server/pb"
 	"github.com/wasp-project/yazi/pkg/storage"
-	"github.com/wasp-project/yazi/pkg/utils"
 
 	"github.com/mlycore/log"
 	"google.golang.org/grpc"
@@ -140,8 +139,7 @@ func (s *gr) Keys(ctx context.Context, req *pb.MKVRequest) (*pb.MKVResponse, err
 }
 
 func (s *gr) GetMeta(key string) (string, error) {
-	utils.TODO()
-	return "", nil
+	return s.store.Get(MetadataKeyPrefix + key)
 }
 
 func (s *gr) SetMeta(key, value string) error {
@@ -149,13 +147,11 @@ func (s *gr) SetMeta(key, value string) error {
 }
 
 func (s *gr) DelMeta(key string) error {
-	utils.TODO()
-	return nil
+	return s.store.Del(MetadataKeyPrefix + key)
 }
 
 func (s *gr) GetRaft(key string) (string, error) {
-	utils.TODO()
-	return "", nil
+	return s.store.Get(RaftKeyPrefix + key)
 }
 
 func (s *gr) SetRaft(key, value string) error {
@@ -163,6 +159,5 @@ func (s *gr) SetRaft(key, value string) error {
 }
 
 func (s *gr) DelRaft(key string) error {
-	utils.TODO()
-	return nil
+	return s.store.Del(RaftKeyPrefix + key)
 }
