@@ -19,8 +19,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/wasp-project/yazi/pkg/utils"
 )
 
 type Cache interface {
@@ -41,6 +39,7 @@ type Cache interface {
 type memcache struct {
 	metadata cachemeta
 	data     map[string]string
+	expires  map[string]time.Time
 	lock     sync.Mutex
 }
 
@@ -57,6 +56,11 @@ func (c *memcache) SetCapacity(capacity int) {
 func (c *memcache) Get(key string) (val string, gotten bool) {
 	c.lock.Lock()
 	defer c.lock.Unlock()
+	if c.isExpiredLocked(key) {
+		delete(c.data, key)
+		delete(c.expires, key)
+		return "", false
+	}
 	v, ok := c.data[key]
 	return v, ok
 }
@@ -66,6 +70,7 @@ func (c *memcache) Set(key string, val string) (prev string, replaced bool) {
 	defer c.lock.Unlock()
 	prev, replaced = c.data[key]
 	c.data[key] = val
+	delete(c.expires, key)
 	return prev, replaced
 }
 
@@ -74,6 +79,7 @@ func (c *memcache) Del(key string) bool {
 	defer c.lock.Unlock()
 	_, found := c.data[key]
 	delete(c.data, key)
+	delete(c.expires, key)
 	return found
 }
 
@@ -86,6 +92,7 @@ func (c *memcache) MSet(keys []string, vals []string) ([]string, []bool) {
 	for id, _ := range keys {
 		prev[id], replaced[id] = c.data[keys[id]]
 		c.data[keys[id]] = vals[id]
+		delete(c.expires, keys[id])
 	}
 
 	return prev, replaced
@@ -97,6 +104,11 @@ func (c *memcache) MGet(keys []string) ([]string, []bool) {
 	vals := make([]string, len(keys))
 	gotten := make([]bool, len(keys))
 	for id, _ := range keys {
+		if c.isExpiredLocked(keys[id]) {
+			delete(c.data, keys[id])
+			delete(c.expires, keys[id])
+			continue
+		}
 		if v, ok := c.data[keys[id]]; ok {
 			gotten[id] = true
 			vals[id] = v
@@ -110,14 +122,28 @@ func (c *memcache) Keys() []string {
 	defer c.lock.Unlock()
 	keys := []string{}
 	for k, _ := range c.data {
+		if c.isExpiredLocked(k) {
+			delete(c.data, k)
+			delete(c.expires, k)
+			continue
+		}
 		keys = append(keys, k)
 	}
 	return keys
 }
 
 func (c *memcache) Expire(key string, ttl time.Duration) bool {
-	utils.TODO()
-	return false
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	if _, ok := c.data[key]; !ok {
+		return false
+	}
+	if ttl <= 0 {
+		delete(c.expires, key)
+		return true
+	}
+	c.expires[key] = time.Now().Add(ttl)
+	return true
 }
 
 func (c *memcache) Encode() []byte {
@@ -133,5 +159,16 @@ func (c *memcache) Decode(data []byte) error {
 	// FIXME: the data loaded from file will contains invisible char "\x00"
 	// they are replaced by the line below temporarily
 	data = []byte(strings.ReplaceAll(string(data), "\x00", ""))
+	if c.expires == nil {
+		c.expires = map[string]time.Time{}
+	}
 	return json.Unmarshal(data, &c.data)
+}
+
+func (c *memcache) isExpiredLocked(key string) bool {
+	exp, ok := c.expires[key]
+	if !ok {
+		return false
+	}
+	return time.Now().After(exp)
 }
