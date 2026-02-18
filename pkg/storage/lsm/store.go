@@ -19,19 +19,23 @@ type entry struct {
 }
 
 type Store struct {
-	mu                 sync.RWMutex
-	mem                map[string]entry
-	wal                *wal
-	sstables           []*sstable
-	nextID             uint64
-	seq                uint64
-	dir                string
-	memtableMaxEntries int
+	mu                  sync.RWMutex
+	mem                 map[string]entry
+	wal                 *wal
+	sstables            []*sstable
+	nextID              uint64
+	seq                 uint64
+	dir                 string
+	memtableMaxEntries  int
+	compactionMaxTables int
 }
 
 func NewStore(conf config.LSMConfig) (*Store, error) {
 	if conf.MemtableMaxEntries <= 0 {
 		conf.MemtableMaxEntries = 1024
+	}
+	if conf.CompactionMaxTables <= 0 {
+		conf.CompactionMaxTables = 4
 	}
 	if conf.Dir == "" {
 		conf.Dir = "data/lsm"
@@ -43,18 +47,19 @@ func NewStore(conf config.LSMConfig) (*Store, error) {
 	if err != nil {
 		return nil, err
 	}
-	w, err := newWAL(conf.Dir)
+	w, err := newWAL(conf.Dir, conf.WALMaxSegmentEntries)
 	if err != nil {
 		return nil, err
 	}
 	s := &Store{
-		mem:                map[string]entry{},
-		wal:                w,
-		sstables:           tables,
-		nextID:             nextID,
-		seq:                maxSeq,
-		dir:                conf.Dir,
-		memtableMaxEntries: conf.MemtableMaxEntries,
+		mem:                 map[string]entry{},
+		wal:                 w,
+		sstables:            tables,
+		nextID:              nextID,
+		seq:                 maxSeq,
+		dir:                 conf.Dir,
+		memtableMaxEntries:  conf.MemtableMaxEntries,
+		compactionMaxTables: conf.CompactionMaxTables,
 	}
 	if err := s.wal.replay(func(e entry) error {
 		if e.seq > s.seq {
@@ -72,6 +77,11 @@ func NewStore(conf config.LSMConfig) (*Store, error) {
 	}
 	if len(s.mem) >= s.memtableMaxEntries {
 		if err := s.flushLocked(); err != nil {
+			return nil, err
+		}
+	}
+	if len(s.sstables) >= s.compactionMaxTables {
+		if err := s.compactLocked(); err != nil {
 			return nil, err
 		}
 	}
@@ -239,5 +249,44 @@ func (s *Store) flushLocked() error {
 	s.sstables = append(s.sstables, table)
 	s.nextID++
 	s.mem = map[string]entry{}
-	return s.wal.reset()
+	if err := s.wal.reset(); err != nil {
+		return err
+	}
+	if len(s.sstables) >= s.compactionMaxTables {
+		return s.compactLocked()
+	}
+	return nil
+}
+
+func (s *Store) compactLocked() error {
+	if len(s.sstables) <= 1 {
+		return nil
+	}
+	merged := map[string]entry{}
+	for i := 0; i < len(s.sstables); i++ {
+		for k, v := range s.sstables[i].entries {
+			existing, ok := merged[k]
+			if !ok || v.seq > existing.seq {
+				merged[k] = v
+			}
+		}
+	}
+	entries := make([]entry, 0, len(merged))
+	for _, e := range merged {
+		if e.deleted {
+			continue
+		}
+		entries = append(entries, e)
+	}
+	sort.Slice(entries, func(i, j int) bool { return entries[i].key < entries[j].key })
+	table, err := writeSSTable(s.dir, s.nextID, entries)
+	if err != nil {
+		return err
+	}
+	for _, t := range s.sstables {
+		_ = os.Remove(t.path)
+	}
+	s.sstables = []*sstable{table}
+	s.nextID++
+	return nil
 }

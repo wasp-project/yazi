@@ -1,6 +1,8 @@
 package lsm
 
 import (
+	"os"
+	"strings"
 	"testing"
 
 	"github.com/wasp-project/yazi/pkg/config"
@@ -68,4 +70,71 @@ func TestFlushToSSTable(t *testing.T) {
 		}
 	}
 	_ = store2.Close()
+}
+
+func TestCompaction(t *testing.T) {
+	dir := t.TempDir()
+	conf := config.LSMConfig{Dir: dir, MemtableMaxEntries: 1, CompactionMaxTables: 2}
+	store, err := NewStore(conf)
+	if err != nil {
+		t.Fatalf("new store: %v", err)
+	}
+	if err := store.Set("a", "1"); err != nil {
+		t.Fatalf("set a: %v", err)
+	}
+	if err := store.Set("b", "2"); err != nil {
+		t.Fatalf("set b: %v", err)
+	}
+	if err := store.Close(); err != nil {
+		t.Fatalf("close: %v", err)
+	}
+	count, err := countFilesWithPrefix(dir, "sstable-")
+	if err != nil {
+		t.Fatalf("count sstable: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected 1 sstable, got %d", count)
+	}
+}
+
+func TestWALSegments(t *testing.T) {
+	dir := t.TempDir()
+	conf := config.LSMConfig{Dir: dir, MemtableMaxEntries: 1}
+	store, err := NewStore(conf)
+	if err != nil {
+		t.Fatalf("new store: %v", err)
+	}
+	if err := store.Set("a", "1"); err != nil {
+		t.Fatalf("set a: %v", err)
+	}
+	if err := store.Set("b", "2"); err != nil {
+		t.Fatalf("set b: %v", err)
+	}
+	if err := store.Set("c", "3"); err != nil {
+		t.Fatalf("set c: %v", err)
+	}
+	if err := store.Close(); err != nil {
+		t.Fatalf("close: %v", err)
+	}
+	count, err := countFilesWithPrefix(dir, "wal-")
+	if err != nil {
+		t.Fatalf("count wal: %v", err)
+	}
+	if count != 1 {
+		t.Fatalf("expected 1 wal segment, got %d", count)
+	}
+}
+
+func countFilesWithPrefix(dir, prefix string) (int, error) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return 0, err
+	}
+	count := 0
+	for _, e := range entries {
+		if strings.HasPrefix(e.Name(), prefix) {
+			count++
+		}
+	}
+	return count, nil
 }
