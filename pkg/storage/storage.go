@@ -72,8 +72,9 @@ func newKVStore(buffer, capacity int, kp policy.KeyPolicy) *Store {
 				size:      0,
 				maxmemory: buffer,
 			},
-			data: map[string]string{},
-			lock: sync.Mutex{},
+			data:    map[string]string{},
+			expires: map[string]time.Time{},
+			lock:    sync.Mutex{},
 		}
 	}
 
@@ -131,13 +132,16 @@ func (s *Store) Del(key string) error {
 }
 
 func (s *Store) MSet(keys, values []string) error {
+	if len(keys) != len(values) {
+		return errors.New("keys and values length mismatch")
+	}
 	nkeys := make([]string, len(keys))
 	nvals := make([]string, len(keys))
 	for i := range keys {
 		nkeys[i] = strings.TrimSpace(keys[i])
 		nvals[i] = strings.TrimSpace(values[i])
 	}
-	s.cache.MSet(keys, values)
+	s.cache.MSet(nkeys, nvals)
 	if s.persistent != nil {
 		_, err := s.persistent.Write(s.cache.Encode())
 		return err
@@ -150,7 +154,7 @@ func (s *Store) MGet(keys []string) ([]string, error) {
 	for i := range keys {
 		nkeys[i] = strings.TrimSpace(keys[i])
 	}
-	values, _ := s.cache.MGet(keys)
+	values, _ := s.cache.MGet(nkeys)
 	return values, nil
 }
 
