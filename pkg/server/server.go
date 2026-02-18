@@ -24,6 +24,7 @@ import (
 	sn "github.com/wasp-project/yazi/pkg/server/naive"
 	"github.com/wasp-project/yazi/pkg/storage"
 	"github.com/wasp-project/yazi/pkg/storage/local"
+	"github.com/wasp-project/yazi/pkg/storage/lsm"
 
 	"github.com/mlycore/log"
 )
@@ -67,9 +68,14 @@ func (s *Server) Run() {
 
 	s.manager = storage.NewManager()
 
-	// init storage
-	if len(s.conf.Storage) != 0 {
-		// decide where to persist
+	if s.conf.Engine == storage.EngineLSM {
+		var err error
+		store, err = lsm.NewStore(s.conf.LSM)
+		if err != nil {
+			log.Errorf("Init LSM storage error: %s", err)
+			return
+		}
+	} else if len(s.conf.Storage) != 0 {
 		switch s.conf.Storage {
 		case storage.StorageClassLocal:
 			persistent = local.NewLocalStorage()
