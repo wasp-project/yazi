@@ -169,7 +169,10 @@ var (
 		defer client.Close()
 
 		n := len(args)
-		keys = args[:n/2-1]
+		if n%2 != 0 {
+			panic("mset expects even number of arguments")
+		}
+		keys = args[:n/2]
 		values = args[n/2:]
 
 		if err := client.MSet(keys, values); err != nil {
