@@ -41,6 +41,7 @@ type ServerConfig struct {
 	RaftNode        string                   `json:"raftNode,omitempty"`
 	Experimental    ExperimentalConfig       `json:"experimental,omitempty"`
 	LSM             LSMConfig                `json:"lsm,omitempty" yaml:"lsm"`
+	Replication     ReplicationConfig        `json:"replication,omitempty" yaml:"replication"`
 }
 
 type ExperimentalConfig struct {
@@ -53,6 +54,14 @@ type ExperimentalConfig struct {
 type LSMConfig struct {
 	Dir                string `json:"dir,omitempty" yaml:"dir"`
 	MemtableMaxEntries int    `json:"memtableMaxEntries,omitempty" yaml:"memtableMaxEntries"`
+}
+
+type ReplicationConfig struct {
+	Enabled       bool     `json:"enabled,omitempty" yaml:"enabled"`
+	Peers         []string `json:"peers,omitempty" yaml:"peers"`
+	WriteQuorum   int      `json:"writeQuorum,omitempty" yaml:"writeQuorum"`
+	ReadQuorum    int      `json:"readQuorum,omitempty" yaml:"readQuorum"`
+	TimeoutMillis int      `json:"timeoutMillis,omitempty" yaml:"timeoutMillis"`
 }
 
 func Default() *ServerConfig {
@@ -91,6 +100,15 @@ func Default() *ServerConfig {
 	}
 	if conf.LSM.MemtableMaxEntries == 0 {
 		conf.LSM.MemtableMaxEntries = 1024
+	}
+	if conf.Replication.TimeoutMillis == 0 {
+		conf.Replication.TimeoutMillis = 500
+	}
+	if conf.Replication.WriteQuorum == 0 {
+		conf.Replication.WriteQuorum = 1
+	}
+	if conf.Replication.ReadQuorum == 0 {
+		conf.Replication.ReadQuorum = 1
 	}
 
 	return conf
