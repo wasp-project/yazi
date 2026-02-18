@@ -32,6 +32,7 @@ type ServerConfig struct {
 	Protocol        protocol.Protocol        `json:"protocol,omitempty" default:"naive"`
 	Policy          policy.KeyPolicy         `json:"policy,omitempty" default:"none"`
 	Storage         storage.StorageClass     `json:"storage,omitempty" default:"memory"`
+	Engine          storage.Engine           `json:"engine,omitempty" default:"mem"`
 	Persistent      storage.PersistentPolicy `json:"persistent,omitempty" default:"append"`
 	ScheduledPeriod int                      `json:"scheduledPeriod,omitempty" yaml:"scheduledPeriod" default:"10"`
 	Capacity        int                      `json:"capacity,omitempty" default:"1024"`
@@ -39,6 +40,7 @@ type ServerConfig struct {
 	RaftPort        int                      `json:"raftPort,omitempty"`
 	RaftNode        string                   `json:"raftNode,omitempty"`
 	Experimental    ExperimentalConfig       `json:"experimental,omitempty"`
+	LSM             LSMConfig                `json:"lsm,omitempty" yaml:"lsm"`
 }
 
 type ExperimentalConfig struct {
@@ -46,6 +48,11 @@ type ExperimentalConfig struct {
 	RaftNode string `json:"raftNode,omitempty" yaml:"raftNode"`
 	Capacity int    `json:"capacity,omitempty" default:"1024"`
 	Buffer   int    `json:"buffer,omitempty" default:"1024"`
+}
+
+type LSMConfig struct {
+	Dir                string `json:"dir,omitempty" yaml:"dir"`
+	MemtableMaxEntries int    `json:"memtableMaxEntries,omitempty" yaml:"memtableMaxEntries"`
 }
 
 func Default() *ServerConfig {
@@ -63,6 +70,8 @@ func Default() *ServerConfig {
 				conf.Policy = policy.KeyPolicy(tag)
 			case "Storage":
 				conf.Storage = storage.StorageClass(tag)
+			case "Engine":
+				conf.Engine = storage.Engine(tag)
 			case "Capacity":
 				c, _ := strconv.ParseInt(tag, 10, 64)
 				conf.Capacity = int(c)
@@ -75,6 +84,13 @@ func Default() *ServerConfig {
 				conf.ScheduledPeriod = int(sp)
 			}
 		}
+	}
+
+	if conf.LSM.Dir == "" {
+		conf.LSM.Dir = "data/lsm"
+	}
+	if conf.LSM.MemtableMaxEntries == 0 {
+		conf.LSM.MemtableMaxEntries = 1024
 	}
 
 	return conf
