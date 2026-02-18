@@ -52,8 +52,10 @@ type ExperimentalConfig struct {
 }
 
 type LSMConfig struct {
-	Dir                string `json:"dir,omitempty" yaml:"dir"`
-	MemtableMaxEntries int    `json:"memtableMaxEntries,omitempty" yaml:"memtableMaxEntries"`
+	Dir                  string `json:"dir,omitempty" yaml:"dir"`
+	MemtableMaxEntries   int    `json:"memtableMaxEntries,omitempty" yaml:"memtableMaxEntries"`
+	CompactionMaxTables  int    `json:"compactionMaxTables,omitempty" yaml:"compactionMaxTables"`
+	WALMaxSegmentEntries int    `json:"walMaxSegmentEntries,omitempty" yaml:"walMaxSegmentEntries"`
 }
 
 type ReplicationConfig struct {
@@ -100,6 +102,12 @@ func Default() *ServerConfig {
 	}
 	if conf.LSM.MemtableMaxEntries == 0 {
 		conf.LSM.MemtableMaxEntries = 1024
+	}
+	if conf.LSM.CompactionMaxTables == 0 {
+		conf.LSM.CompactionMaxTables = 4
+	}
+	if conf.LSM.WALMaxSegmentEntries == 0 {
+		conf.LSM.WALMaxSegmentEntries = 0
 	}
 	if conf.Replication.TimeoutMillis == 0 {
 		conf.Replication.TimeoutMillis = 500
