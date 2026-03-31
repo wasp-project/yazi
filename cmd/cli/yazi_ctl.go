@@ -15,13 +15,14 @@
 package main
 
 import (
-        "fmt"
-        "os"
+	"encoding/json"
+	"fmt"
 
-        "github.com/wasp-project/yazi/pkg/client"
-        "github.com/wasp-project/yazi/pkg/protocol"
+	"github.com/wasp-project/yazi/pkg/client"
+	"github.com/wasp-project/yazi/pkg/memory"
+	"github.com/wasp-project/yazi/pkg/protocol"
 
-        "github.com/spf13/cobra"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -80,21 +81,83 @@ var (
 
 	memoryCmd = &cobra.Command{
 		Use:   "memory",
-		Short: "yazictl memory operations for OpenClaw",
+		Short: "yazictl memory <basic|advanced|policy>",
 	}
 
-	memorySaveCmd = &cobra.Command{
-		Use:   "save <key> <file_path>",
-		Short: "save memory from file to yazi",
-		Args:  cobra.ExactArgs(2),
-		Run:   memorySavef,
+	memoryBasicCmd = &cobra.Command{
+		Use:   "basic",
+		Short: "yazictl memory basic <put|get|list|del>",
+	}
+	memoryAdvancedCmd = &cobra.Command{
+		Use:   "advanced",
+		Short: "yazictl memory advanced <put|get|list|del>",
+	}
+	memoryPolicyCmd = &cobra.Command{
+		Use:   "policy",
+		Short: "yazictl memory policy <put|get|list|del>",
 	}
 
-	memoryLoadCmd = &cobra.Command{
-		Use:   "load <key> [file_path]",
-		Short: "load memory from yazi to file or stdout",
-		Args:  cobra.RangeArgs(1, 2),
-		Run:   memoryLoadf,
+	memoryBasicPutCmd = &cobra.Command{
+		Use:   "put",
+		Short: "yazictl memory basic put --json '<payload>'",
+		Run:   memoryBasicPutf,
+	}
+	memoryBasicGetCmd = &cobra.Command{
+		Use:   "get <id>",
+		Short: "yazictl memory basic get <id>",
+		Run:   memoryBasicGetf,
+	}
+	memoryBasicListCmd = &cobra.Command{
+		Use:   "list",
+		Short: "yazictl memory basic list --filter '<filter>'",
+		Run:   memoryBasicListf,
+	}
+	memoryBasicDelCmd = &cobra.Command{
+		Use:   "del <id>",
+		Short: "yazictl memory basic del <id>",
+		Run:   memoryBasicDelf,
+	}
+
+	memoryAdvancedPutCmd = &cobra.Command{
+		Use:   "put",
+		Short: "yazictl memory advanced put --json '<payload>'",
+		Run:   memoryAdvancedPutf,
+	}
+	memoryAdvancedGetCmd = &cobra.Command{
+		Use:   "get <id>",
+		Short: "yazictl memory advanced get <id>",
+		Run:   memoryAdvancedGetf,
+	}
+	memoryAdvancedListCmd = &cobra.Command{
+		Use:   "list",
+		Short: "yazictl memory advanced list --filter '<filter>'",
+		Run:   memoryAdvancedListf,
+	}
+	memoryAdvancedDelCmd = &cobra.Command{
+		Use:   "del <id>",
+		Short: "yazictl memory advanced del <id>",
+		Run:   memoryAdvancedDelf,
+	}
+
+	memoryPolicyPutCmd = &cobra.Command{
+		Use:   "put",
+		Short: "yazictl memory policy put --json '<payload>'",
+		Run:   memoryPolicyPutf,
+	}
+	memoryPolicyGetCmd = &cobra.Command{
+		Use:   "get <id>",
+		Short: "yazictl memory policy get <id>",
+		Run:   memoryPolicyGetf,
+	}
+	memoryPolicyListCmd = &cobra.Command{
+		Use:   "list",
+		Short: "yazictl memory policy list --filter '<filter>'",
+		Run:   memoryPolicyListf,
+	}
+	memoryPolicyDelCmd = &cobra.Command{
+		Use:   "del <id>",
+		Short: "yazictl memory policy del <id>",
+		Run:   memoryPolicyDelf,
 	}
 )
 
@@ -220,69 +283,187 @@ var (
 
 	expiref = func(cmd *cobra.Command, args []string) {
 
-        }
+	}
 
-        memorySavef = func(cmd *cobra.Command, args []string) {
-                client, err := client.NewYaziClient(protocol.Protocol(proto))
-                if err != nil {
-                        panic(err)
-                }
-                if err := client.Connect(host, port); err != nil {
-                        panic(err)
-                }
-                defer client.Close()
+	memoryBasicPutf = func(cmd *cobra.Command, args []string) {
+		store, closeFn := newMemoryStore()
+		defer closeFn()
+		var payload memory.BasicMemory
+		if err := json.Unmarshal([]byte(memoryJSON), &payload); err != nil {
+			panic(err)
+		}
+		id, err := store.PutBasic(payload)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%s", id)
+	}
 
-                key = args[0]
-                filePath := args[1]
-                data, err := os.ReadFile(filePath)
-                if err != nil {
-                        panic(err)
-                }
+	memoryBasicGetf = func(cmd *cobra.Command, args []string) {
+		store, closeFn := newMemoryStore()
+		defer closeFn()
+		m, err := store.GetBasic(args[0])
+		if err != nil {
+			panic(err)
+		}
+		data, err := json.Marshal(m)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%s", data)
+	}
 
-                if err := client.Set(key, string(data)); err != nil {
-                        panic(err)
-                } else {
-                        fmt.Println("memory saved successfully")
-                }
-        }
+	memoryBasicListf = func(cmd *cobra.Command, args []string) {
+		store, closeFn := newMemoryStore()
+		defer closeFn()
+		var filter memory.BasicFilter
+		if memoryFilter != "" {
+			if err := json.Unmarshal([]byte(memoryFilter), &filter); err != nil {
+				panic(err)
+			}
+		}
+		list, err := store.ListBasic(filter)
+		if err != nil {
+			panic(err)
+		}
+		data, err := json.Marshal(list)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%s", data)
+	}
 
-        memoryLoadf = func(cmd *cobra.Command, args []string) {
-                client, err := client.NewYaziClient(protocol.Protocol(proto))
-                if err != nil {
-                        panic(err)
-                }
-                if err := client.Connect(host, port); err != nil {
-                        panic(err)
-                }
-                defer client.Close()
+	memoryBasicDelf = func(cmd *cobra.Command, args []string) {
+		store, closeFn := newMemoryStore()
+		defer closeFn()
+		if err := store.DeleteBasic(args[0]); err != nil {
+			panic(err)
+		}
+	}
 
-                key = args[0]
+	memoryAdvancedPutf = func(cmd *cobra.Command, args []string) {
+		store, closeFn := newMemoryStore()
+		defer closeFn()
+		var payload memory.AdvancedMemory
+		if err := json.Unmarshal([]byte(memoryJSON), &payload); err != nil {
+			panic(err)
+		}
+		id, err := store.PutAdvanced(payload)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%s", id)
+	}
 
-                val, err := client.Get(key)
-                if err != nil {
-                        panic(err)
-                }
+	memoryAdvancedGetf = func(cmd *cobra.Command, args []string) {
+		store, closeFn := newMemoryStore()
+		defer closeFn()
+		m, err := store.GetAdvanced(args[0])
+		if err != nil {
+			panic(err)
+		}
+		data, err := json.Marshal(m)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%s", data)
+	}
 
-                if len(args) == 2 {
-                        filePath := args[1]
-                        if err := os.WriteFile(filePath, []byte(val), 0644); err != nil {
-                                panic(err)
-                        }
-                        fmt.Printf("memory loaded to %s successfully\n", filePath)
-                } else {
-                        fmt.Printf("%s\n", val)
-                }
-        }
+	memoryAdvancedListf = func(cmd *cobra.Command, args []string) {
+		store, closeFn := newMemoryStore()
+		defer closeFn()
+		var filter memory.AdvancedFilter
+		if memoryFilter != "" {
+			if err := json.Unmarshal([]byte(memoryFilter), &filter); err != nil {
+				panic(err)
+			}
+		}
+		list, err := store.ListAdvanced(filter)
+		if err != nil {
+			panic(err)
+		}
+		data, err := json.Marshal(list)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%s", data)
+	}
+
+	memoryAdvancedDelf = func(cmd *cobra.Command, args []string) {
+		store, closeFn := newMemoryStore()
+		defer closeFn()
+		if err := store.DeleteAdvanced(args[0]); err != nil {
+			panic(err)
+		}
+	}
+
+	memoryPolicyPutf = func(cmd *cobra.Command, args []string) {
+		store, closeFn := newMemoryStore()
+		defer closeFn()
+		var payload memory.CognitivePolicy
+		if err := json.Unmarshal([]byte(memoryJSON), &payload); err != nil {
+			panic(err)
+		}
+		id, err := store.PutPolicy(payload)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%s", id)
+	}
+
+	memoryPolicyGetf = func(cmd *cobra.Command, args []string) {
+		store, closeFn := newMemoryStore()
+		defer closeFn()
+		m, err := store.GetPolicy(args[0])
+		if err != nil {
+			panic(err)
+		}
+		data, err := json.Marshal(m)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%s", data)
+	}
+
+	memoryPolicyListf = func(cmd *cobra.Command, args []string) {
+		store, closeFn := newMemoryStore()
+		defer closeFn()
+		var filter memory.PolicyFilter
+		if memoryFilter != "" {
+			if err := json.Unmarshal([]byte(memoryFilter), &filter); err != nil {
+				panic(err)
+			}
+		}
+		list, err := store.ListPolicy(filter)
+		if err != nil {
+			panic(err)
+		}
+		data, err := json.Marshal(list)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%s", data)
+	}
+
+	memoryPolicyDelf = func(cmd *cobra.Command, args []string) {
+		store, closeFn := newMemoryStore()
+		defer closeFn()
+		if err := store.DeletePolicy(args[0]); err != nil {
+			panic(err)
+		}
+	}
 )
 
 var (
-	key    string
-	value  string
-	keys   []string
-	values []string
-	proto  string
-	port   string
-	host   string
+	key          string
+	value        string
+	keys         []string
+	values       []string
+	proto        string
+	port         string
+	host         string
+	memoryJSON   string
+	memoryFilter string
 )
 
 func init() {
@@ -293,15 +474,78 @@ func init() {
 	rootCmd.AddCommand(setCmd)
 	rootCmd.AddCommand(delCmd)
 	rootCmd.AddCommand(msetCmd)
-        rootCmd.AddCommand(mgetCmd)
-        rootCmd.AddCommand(keysCmd)
-        rootCmd.AddCommand(expireCmd)
-        
-        memoryCmd.AddCommand(memorySaveCmd)
-        memoryCmd.AddCommand(memoryLoadCmd)
-        rootCmd.AddCommand(memoryCmd)
+	rootCmd.AddCommand(mgetCmd)
+	rootCmd.AddCommand(keysCmd)
+	rootCmd.AddCommand(expireCmd)
+
+	rootCmd.AddCommand(memoryCmd)
+	memoryCmd.AddCommand(memoryBasicCmd)
+	memoryCmd.AddCommand(memoryAdvancedCmd)
+	memoryCmd.AddCommand(memoryPolicyCmd)
+
+	memoryBasicCmd.AddCommand(memoryBasicPutCmd)
+	memoryBasicCmd.AddCommand(memoryBasicGetCmd)
+	memoryBasicCmd.AddCommand(memoryBasicListCmd)
+	memoryBasicCmd.AddCommand(memoryBasicDelCmd)
+
+	memoryAdvancedCmd.AddCommand(memoryAdvancedPutCmd)
+	memoryAdvancedCmd.AddCommand(memoryAdvancedGetCmd)
+	memoryAdvancedCmd.AddCommand(memoryAdvancedListCmd)
+	memoryAdvancedCmd.AddCommand(memoryAdvancedDelCmd)
+
+	memoryPolicyCmd.AddCommand(memoryPolicyPutCmd)
+	memoryPolicyCmd.AddCommand(memoryPolicyGetCmd)
+	memoryPolicyCmd.AddCommand(memoryPolicyListCmd)
+	memoryPolicyCmd.AddCommand(memoryPolicyDelCmd)
+
+	memoryBasicPutCmd.Flags().StringVar(&memoryJSON, "json", "", "memory payload json")
+	memoryAdvancedPutCmd.Flags().StringVar(&memoryJSON, "json", "", "memory payload json")
+	memoryPolicyPutCmd.Flags().StringVar(&memoryJSON, "json", "", "memory payload json")
+	memoryBasicListCmd.Flags().StringVar(&memoryFilter, "filter", "", "filter json")
+	memoryAdvancedListCmd.Flags().StringVar(&memoryFilter, "filter", "", "filter json")
+	memoryPolicyListCmd.Flags().StringVar(&memoryFilter, "filter", "", "filter json")
 }
 
 func main() {
 	rootCmd.Execute()
+}
+
+type memoryClientKV struct {
+	cli client.Client
+}
+
+func (k *memoryClientKV) Get(key string) (string, error) {
+	return k.cli.Get(key)
+}
+
+func (k *memoryClientKV) Set(key, value string) error {
+	return k.cli.Set(key, value)
+}
+
+func (k *memoryClientKV) Del(key string) error {
+	return k.cli.Del(key)
+}
+
+func (k *memoryClientKV) MGet(keys []string) ([]string, error) {
+	return k.cli.MGet(keys)
+}
+
+func (k *memoryClientKV) MSet(keys, values []string) error {
+	return k.cli.MSet(keys, values)
+}
+
+func (k *memoryClientKV) Keys() ([]string, error) {
+	return k.cli.Keys()
+}
+
+func newMemoryStore() (*memory.Store, func()) {
+	cli, err := client.NewYaziClient(protocol.Protocol(proto))
+	if err != nil {
+		panic(err)
+	}
+	if err := cli.Connect(host, port); err != nil {
+		panic(err)
+	}
+	kv := &memoryClientKV{cli: cli}
+	return memory.NewStore(kv), func() { cli.Close() }
 }
