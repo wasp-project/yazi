@@ -15,12 +15,13 @@
 package main
 
 import (
-	"fmt"
+        "fmt"
+        "os"
 
-	"github.com/wasp-project/yazi/pkg/client"
-	"github.com/wasp-project/yazi/pkg/protocol"
+        "github.com/wasp-project/yazi/pkg/client"
+        "github.com/wasp-project/yazi/pkg/protocol"
 
-	"github.com/spf13/cobra"
+        "github.com/spf13/cobra"
 )
 
 var (
@@ -75,6 +76,25 @@ var (
 		Use:   "expire",
 		Short: "yazictl expire <key> <ttl>",
 		Run:   expiref,
+	}
+
+	memoryCmd = &cobra.Command{
+		Use:   "memory",
+		Short: "yazictl memory operations for OpenClaw",
+	}
+
+	memorySaveCmd = &cobra.Command{
+		Use:   "save <key> <file_path>",
+		Short: "save memory from file to yazi",
+		Args:  cobra.ExactArgs(2),
+		Run:   memorySavef,
+	}
+
+	memoryLoadCmd = &cobra.Command{
+		Use:   "load <key> [file_path]",
+		Short: "load memory from yazi to file or stdout",
+		Args:  cobra.RangeArgs(1, 2),
+		Run:   memoryLoadf,
 	}
 )
 
@@ -200,7 +220,59 @@ var (
 
 	expiref = func(cmd *cobra.Command, args []string) {
 
-	}
+        }
+
+        memorySavef = func(cmd *cobra.Command, args []string) {
+                client, err := client.NewYaziClient(protocol.Protocol(proto))
+                if err != nil {
+                        panic(err)
+                }
+                if err := client.Connect(host, port); err != nil {
+                        panic(err)
+                }
+                defer client.Close()
+
+                key = args[0]
+                filePath := args[1]
+                data, err := os.ReadFile(filePath)
+                if err != nil {
+                        panic(err)
+                }
+
+                if err := client.Set(key, string(data)); err != nil {
+                        panic(err)
+                } else {
+                        fmt.Println("memory saved successfully")
+                }
+        }
+
+        memoryLoadf = func(cmd *cobra.Command, args []string) {
+                client, err := client.NewYaziClient(protocol.Protocol(proto))
+                if err != nil {
+                        panic(err)
+                }
+                if err := client.Connect(host, port); err != nil {
+                        panic(err)
+                }
+                defer client.Close()
+
+                key = args[0]
+
+                val, err := client.Get(key)
+                if err != nil {
+                        panic(err)
+                }
+
+                if len(args) == 2 {
+                        filePath := args[1]
+                        if err := os.WriteFile(filePath, []byte(val), 0644); err != nil {
+                                panic(err)
+                        }
+                        fmt.Printf("memory loaded to %s successfully\n", filePath)
+                } else {
+                        fmt.Printf("%s\n", val)
+                }
+        }
 )
 
 var (
@@ -221,9 +293,13 @@ func init() {
 	rootCmd.AddCommand(setCmd)
 	rootCmd.AddCommand(delCmd)
 	rootCmd.AddCommand(msetCmd)
-	rootCmd.AddCommand(mgetCmd)
-	rootCmd.AddCommand(keysCmd)
-	rootCmd.AddCommand(expireCmd)
+        rootCmd.AddCommand(mgetCmd)
+        rootCmd.AddCommand(keysCmd)
+        rootCmd.AddCommand(expireCmd)
+        
+        memoryCmd.AddCommand(memorySaveCmd)
+        memoryCmd.AddCommand(memoryLoadCmd)
+        rootCmd.AddCommand(memoryCmd)
 }
 
 func main() {
