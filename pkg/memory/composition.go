@@ -120,6 +120,40 @@ func NewStorePipeline(s *Store, budget provider.Budget, pricing provider.Pricing
 	return provider.NewPipeline(stages, pricing, budget, meter, tenant)
 }
 
+// RecallWithProfile recalls memories for a query using the given composition
+// profile against an existing Store. The deterministic `student` profile reads
+// straight from the durable store (zero tokens). Richer profiles (e.g.
+// `standard`) build their own pipeline and are seeded from the store's basic
+// memories before recall, so vector/semantic profiles work over existing data
+// without a separate index. Returns the hits and the aggregated cost Usage.
+func RecallWithProfile(s *Store, cfg provider.Config, q provider.Query, meter *provider.Meter, tenant string) ([]provider.Hit, provider.Usage, error) {
+	switch strings.ToLower(cfg.Profile) {
+	case "", "student":
+		p := NewStorePipeline(s, cfg.Budget, cfg.Pricing, meter, tenant)
+		return p.Recall(q)
+	default:
+		p, err := provider.BuildPipeline(cfg, meter, tenant)
+		if err != nil {
+			return nil, provider.Usage{}, err
+		}
+		// Seed the profile's pipeline from the durable store so semantic/vector
+		// recall works over existing memories (re-embedded per call).
+		basics, err := s.ListBasic(BasicFilter{Limit: 1000})
+		if err != nil {
+			return nil, provider.Usage{}, err
+		}
+		for _, m := range basics {
+			if _, err := p.Ingest(provider.Item{
+				ID: m.ID, Class: "basic", Kind: string(m.Kind), Scope: m.Scope,
+				Subject: m.Subject, Text: m.Content, Tags: m.Tags,
+			}); err != nil {
+				return nil, provider.Usage{}, err
+			}
+		}
+		return p.Recall(q)
+	}
+}
+
 var compWordRe = regexp.MustCompile(`[a-z0-9]+`)
 
 func compTokens(text string) map[string]struct{} {

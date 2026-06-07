@@ -199,7 +199,42 @@ yazictl memory basic put --json '{"kind":"decision","scope":"project","subject":
 
 ---
 
-## 9. OpenClaw System-Prompt Rules
+## 9. Cost-Aware Recall (profiles)
+
+`yazictl memory recall` retrieves memories through a **composition profile** and
+prints the hits plus the **metered cost**, so you can trade recall quality for
+cost explicitly (see [COMPOSITION.md](./COMPOSITION.md)):
+
+```bash
+# student (default): deterministic key/keyword recall over the durable store, $0
+yazictl --tenant demo memory recall --query "what UI theme does the user want" --tag ui --top-k 2
+
+# standard: embeds the query + memories and ranks by vector similarity (metered)
+yazictl --tenant demo memory recall --query "dark theme in the interface" --profile standard --top-k 2
+
+# bound the recalled context (read-side budget) to fit a small local model
+yazictl --tenant demo memory recall --query "..." --max-context-tokens 200
+```
+
+Output is JSON with `hits`, `usage` (tokens), and `costUSD`:
+
+```json
+{ "profile": "student", "hits": [ { "id": "...", "text": "prefers dark mode in the UI", "score": 0.25 } ],
+  "usage": { "embedTokens": 0, "contextTokens": 7 }, "costUSD": 0 }
+```
+
+- **student** costs **$0** (no LLM, no embeddings) and reads straight from the
+  persisted store — the right default for a local Gemma agent.
+- **standard** embeds locally and vector-ranks; cost is tiny and stays on your
+  machine. Richer profiles (`pro`: LLM extraction/rerank) are interface stubs that
+  fail fast until wired to a provider.
+
+For an agent loop, use `recall` to assemble the prompt context cheaply, and the
+typed `memory basic/advanced/policy put` commands to write memories back.
+
+---
+
+## 10. OpenClaw System-Prompt Rules
 
 Add a block like this to OpenClaw's system prompt / `MEMORY.md` so the agent uses
 Yazi consistently (commands match the current CLI):
@@ -225,7 +260,7 @@ many raw records.
 
 ---
 
-## 10. Multiple Local Agents (optional)
+## 11. Multiple Local Agents (optional)
 
 If you run several agents/projects on one machine and want their memories kept
 separate, give each a tenant id — keys are namespaced under `tenant/<id>/...`
@@ -240,7 +275,7 @@ Omit `--tenant` for the default shared (bypass) namespace.
 
 ---
 
-## 11. Persistence & Data Location
+## 12. Persistence & Data Location
 
 - Memory lives in `data/lsm/` (WAL + SSTables) when `engine: lsm`.
 - It is reloaded on server start, so restarts are transparent.
@@ -250,7 +285,7 @@ Omit `--tenant` for the default shared (bypass) namespace.
 
 ---
 
-## 12. Troubleshooting
+## 13. Troubleshooting
 
 | Symptom | Fix |
 | --- | --- |

@@ -20,6 +20,7 @@ import (
 
 	"github.com/wasp-project/yazi/pkg/client"
 	"github.com/wasp-project/yazi/pkg/memory"
+	"github.com/wasp-project/yazi/pkg/memory/provider"
 	"github.com/wasp-project/yazi/pkg/protocol"
 	"github.com/wasp-project/yazi/pkg/tenant"
 
@@ -96,6 +97,15 @@ var (
 	memoryPolicyCmd = &cobra.Command{
 		Use:   "policy",
 		Short: "yazictl memory policy <put|get|list|del>",
+	}
+
+	memoryRecallCmd = &cobra.Command{
+		Use:   "recall",
+		Short: "yazictl memory recall --query '<text>' [--profile student|standard] [--tag T] [--top-k N]",
+		Long: "Recall memories with a cost-aware composition profile. 'student' (default) reads " +
+			"the durable store at zero token cost; 'standard' embeds and vector-searches. " +
+			"Prints the hits plus the metered Usage and estimated cost.",
+		Run: memoryRecallf,
 	}
 
 	memoryBasicPutCmd = &cobra.Command{
@@ -453,6 +463,57 @@ var (
 			panic(err)
 		}
 	}
+
+	memoryRecallf = func(cmd *cobra.Command, args []string) {
+		q := recallQuery
+		if q == "" && len(args) > 0 {
+			q = args[0]
+		}
+		if q == "" {
+			panic("recall needs a query: --query '<text>' (or a positional arg)")
+		}
+		store, closeFn := newMemoryStore()
+		defer closeFn()
+
+		pricing := provider.DefaultPricing()
+		cfg := provider.Config{
+			Profile: recallProfile,
+			Pricing: pricing,
+			Budget:  provider.Budget{RecallContextTokens: recallMaxContext},
+		}
+		meter := provider.NewMeter()
+		query := provider.Query{Text: q, Tag: recallTag, TopK: recallTopK}
+
+		hits, usage, err := memory.RecallWithProfile(store, cfg, query, meter, tenantID)
+		if err != nil {
+			panic(err)
+		}
+
+		type hitOut struct {
+			ID    string  `json:"id"`
+			Text  string  `json:"text"`
+			Score float64 `json:"score"`
+		}
+		outHits := make([]hitOut, len(hits))
+		for i, h := range hits {
+			outHits[i] = hitOut{ID: h.ID, Text: h.Text, Score: h.Score}
+		}
+		profile := recallProfile
+		if profile == "" {
+			profile = "student"
+		}
+		out := map[string]interface{}{
+			"profile": profile,
+			"hits":    outHits,
+			"usage":   usage,
+			"costUSD": pricing.Cost(usage),
+		}
+		data, err := json.MarshalIndent(out, "", "  ")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("%s", data)
+	}
 )
 
 var (
@@ -466,6 +527,12 @@ var (
 	memoryJSON   string
 	memoryFilter string
 	tenantID     string
+
+	recallQuery      string
+	recallProfile    string
+	recallTag        string
+	recallTopK       int
+	recallMaxContext int
 )
 
 func init() {
@@ -487,6 +554,7 @@ func init() {
 	memoryCmd.AddCommand(memoryBasicCmd)
 	memoryCmd.AddCommand(memoryAdvancedCmd)
 	memoryCmd.AddCommand(memoryPolicyCmd)
+	memoryCmd.AddCommand(memoryRecallCmd)
 
 	memoryBasicCmd.AddCommand(memoryBasicPutCmd)
 	memoryBasicCmd.AddCommand(memoryBasicGetCmd)
@@ -509,6 +577,12 @@ func init() {
 	memoryBasicListCmd.Flags().StringVar(&memoryFilter, "filter", "", "filter json")
 	memoryAdvancedListCmd.Flags().StringVar(&memoryFilter, "filter", "", "filter json")
 	memoryPolicyListCmd.Flags().StringVar(&memoryFilter, "filter", "", "filter json")
+
+	memoryRecallCmd.Flags().StringVar(&recallQuery, "query", "", "recall query text")
+	memoryRecallCmd.Flags().StringVar(&recallProfile, "profile", "student", "composition profile: student | standard")
+	memoryRecallCmd.Flags().StringVar(&recallTag, "tag", "", "restrict candidates to this tag")
+	memoryRecallCmd.Flags().IntVar(&recallTopK, "top-k", 5, "max memories to return")
+	memoryRecallCmd.Flags().IntVar(&recallMaxContext, "max-context-tokens", 0, "cap recalled context tokens (0 = unbounded)")
 }
 
 func main() {

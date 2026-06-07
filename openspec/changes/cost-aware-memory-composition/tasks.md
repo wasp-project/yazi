@@ -23,7 +23,7 @@
 - [x] 4.1 Add a `memory:` block to `pkg/config` (`profile`, per-stage overrides for `custom`, and `budget`); absent block resolves to `student`
 - [x] 4.2 Add a provider registry + profile resolver building a `Pipeline` from config (`student`/`standard`/`pro`/`custom`)
 - [x] 4.3 Validate provider requirements at build time; fail fast with a clear error when a selected provider is unavailable
-- [ ] 4.4 Wire profile selection into `pkg/server`/`cmd/cli` (a recall command + server-side persistent metering, per-tenant profile). **DEFERRED** — additive live-path wiring; see Pause note (the typed CRUD CLI stays; recall is a new additive surface)
+- [x] 4.4 Add a profile-aware `yazictl memory recall --query --profile --tag --top-k --max-context-tokens` command (additive; typed CRUD intact). It builds the pipeline per `--tenant`/`--profile`, runs Recall over the durable store, and prints hits + metered Usage + costUSD. NOTE: metering is per-invocation (client-side); **server-side persistent metering** remains a follow-up
 - [x] 4.5 Tests: `custom` overrides only named stages; unset config behaves like today; unavailable custom store fails fast (per-tenant profiles are supported by construction — a pipeline is built per tenant)
 
 ## 5. Reference "standard" Providers (one real paid path)
