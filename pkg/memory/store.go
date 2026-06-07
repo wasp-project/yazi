@@ -30,6 +30,18 @@ func NewStore(kv KV) *Store {
 	}
 }
 
+// NewStoreWithTenant builds a Store whose keys are namespaced under the given
+// tenant key prefix. An empty prefix yields the original un-prefixed
+// /_memory/... layout, identical to NewStore. The prefix is applied
+// transparently via a decorator (see prefixKV), so the store's internal key
+// shapes are unchanged and per-tenant data is isolated within the same KV.
+func NewStoreWithTenant(kv KV, prefix string) *Store {
+	if prefix == "" {
+		return NewStore(kv)
+	}
+	return NewStore(newPrefixKV(kv, prefix))
+}
+
 func (s *Store) PutBasic(m BasicMemory) (string, error) {
 	if m.ID == "" {
 		m.ID = newID()

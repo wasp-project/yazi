@@ -21,6 +21,7 @@ import (
 	"github.com/wasp-project/yazi/pkg/client"
 	"github.com/wasp-project/yazi/pkg/memory"
 	"github.com/wasp-project/yazi/pkg/protocol"
+	"github.com/wasp-project/yazi/pkg/tenant"
 
 	"github.com/spf13/cobra"
 )
@@ -464,12 +465,16 @@ var (
 	host         string
 	memoryJSON   string
 	memoryFilter string
+	tenantID     string
 )
 
 func init() {
 	rootCmd.Flags().StringVarP(&proto, "protocol", "p", "grpc", "client server protocol")
 	rootCmd.Flags().StringVarP(&host, "host", "H", "127.0.0.1", "server host")
 	rootCmd.Flags().StringVarP(&port, "port", "P", "3456", "server port")
+	// --tenant is persistent so it propagates to the memory subcommands. Empty
+	// (default) routes through the tenant bypass: no namespacing, original keys.
+	rootCmd.PersistentFlags().StringVar(&tenantID, "tenant", "", "tenant id for memory namespacing (empty = bypass)")
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(setCmd)
 	rootCmd.AddCommand(delCmd)
@@ -547,5 +552,22 @@ func newMemoryStore() (*memory.Store, func()) {
 		panic(err)
 	}
 	kv := &memoryClientKV{cli: cli}
-	return memory.NewStore(kv), func() { cli.Close() }
+
+	// Route through the tenant-service layer. An empty --tenant resolves via the
+	// bypass service to an empty prefix, preserving the original key layout.
+	svc := tenantService()
+	ctx, err := svc.Resolve(tenant.Request{TenantID: tenantID})
+	if err != nil {
+		panic(err)
+	}
+	return memory.NewStoreWithTenant(kv, ctx.KeyPrefix()), func() { cli.Close() }
+}
+
+// tenantService selects the tenant service for the CLI: bypass when no --tenant
+// is given, otherwise a static service pinned to the supplied tenant id.
+func tenantService() tenant.Service {
+	if tenantID == "" {
+		return tenant.NewBypassService()
+	}
+	return tenant.NewStaticService(tenantID)
 }

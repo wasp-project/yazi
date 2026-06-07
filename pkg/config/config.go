@@ -42,6 +42,30 @@ type ServerConfig struct {
 	Experimental    ExperimentalConfig       `json:"experimental,omitempty"`
 	LSM             LSMConfig                `json:"lsm,omitempty" yaml:"lsm"`
 	Replication     ReplicationConfig        `json:"replication,omitempty" yaml:"replication"`
+	S3              S3Config                 `json:"s3,omitempty" yaml:"s3"`
+	Tenant          TenantConfig             `json:"tenant,omitempty" yaml:"tenant"`
+}
+
+// TenantConfig configures the tenant-service layer. When absent (the zero
+// value), the system uses the no-op bypass service and behaves as a
+// single-tenant store. Set Mode to "static" with a Tenant id to namespace all
+// memory under one tenant; an external project may supply richer modes.
+type TenantConfig struct {
+	// Mode selects the tenant service: "" or "bypass" (default) or "static".
+	Mode string `json:"mode,omitempty" yaml:"mode"`
+	// Tenant is the tenant id used when Mode is "static".
+	Tenant string `json:"tenant,omitempty" yaml:"tenant"`
+}
+
+// S3Config configures the AWS S3 (or S3-compatible) cloud persistence backend.
+// It is read only when Storage is "s3".
+type S3Config struct {
+	Bucket    string `json:"bucket,omitempty" yaml:"bucket"`
+	Region    string `json:"region,omitempty" yaml:"region"`
+	Key       string `json:"key,omitempty" yaml:"key"`
+	Endpoint  string `json:"endpoint,omitempty" yaml:"endpoint"`
+	AccessKey string `json:"accessKey,omitempty" yaml:"accessKey"`
+	SecretKey string `json:"secretKey,omitempty" yaml:"secretKey"`
 }
 
 type ExperimentalConfig struct {
@@ -119,6 +143,13 @@ func Default() *ServerConfig {
 		conf.Replication.ReadQuorum = 1
 	}
 
+	if conf.S3.Region == "" {
+		conf.S3.Region = "us-east-1"
+	}
+	if conf.S3.Key == "" {
+		conf.S3.Key = "yazi.data"
+	}
+
 	return conf
 }
 
@@ -146,6 +177,15 @@ func (c *ServerConfig) Load(path string) *ServerConfig {
 
 	if os.Getenv("RAFT_NODE") != "" {
 		c.RaftNode = os.Getenv("RAFT_NODE")
+	}
+
+	// S3 credentials may come from the standard AWS environment variables so
+	// they need not be written into the config file.
+	if c.S3.AccessKey == "" {
+		c.S3.AccessKey = os.Getenv("AWS_ACCESS_KEY_ID")
+	}
+	if c.S3.SecretKey == "" {
+		c.S3.SecretKey = os.Getenv("AWS_SECRET_ACCESS_KEY")
 	}
 
 	return c

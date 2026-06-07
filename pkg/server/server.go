@@ -26,6 +26,8 @@ import (
 	"github.com/wasp-project/yazi/pkg/storage"
 	"github.com/wasp-project/yazi/pkg/storage/local"
 	"github.com/wasp-project/yazi/pkg/storage/lsm"
+	"github.com/wasp-project/yazi/pkg/storage/s3"
+	"github.com/wasp-project/yazi/pkg/tenant"
 
 	"github.com/mlycore/log"
 )
@@ -34,10 +36,17 @@ type Server struct {
 	conf    *config.ServerConfig
 	manager *storage.Manager
 	ncore   Service
+	tenant  tenant.Service
 }
 
 func NewServer(conf *config.ServerConfig) *Server {
 	s := &Server{conf: conf}
+
+	// Construct the configured tenant service (the tenant-service layer). It
+	// defaults to bypass when no tenant block is configured. Today the memory
+	// store is namespaced client-side (see cmd/cli), so this is the choke point
+	// for a future server-side memory RPC that would namespace keys here.
+	s.tenant = tenant.New(s.conf.Tenant.Mode, s.conf.Tenant.Tenant)
 
 	// init protocol
 	switch s.conf.Protocol {
@@ -56,6 +65,7 @@ func (s *Server) Run() {
 	log.SetLevel(s.conf.Loglevel)
 
 	log.Infof("Server is configured with storage: %s", s.conf.Storage)
+	log.Infof("Server is configured with tenant mode: %q", s.conf.Tenant.Mode)
 	log.Infof("Server is configured with policy: %s", s.conf.Policy)
 	log.Infof("Server is configured with protocol: %s", s.conf.Protocol)
 	log.Infof("Server is configured with port: %d", s.conf.Port)
@@ -80,6 +90,21 @@ func (s *Server) Run() {
 		switch s.conf.Storage {
 		case storage.StorageClassLocal:
 			persistent = local.NewLocalStorage()
+		case storage.StorageClassS3:
+			s3store, err := s3.New(s3.Config{
+				Bucket:    s.conf.S3.Bucket,
+				Region:    s.conf.S3.Region,
+				Key:       s.conf.S3.Key,
+				Endpoint:  s.conf.S3.Endpoint,
+				AccessKey: s.conf.S3.AccessKey,
+				SecretKey: s.conf.S3.SecretKey,
+			})
+			if err != nil {
+				// Fail fast: do not silently fall back to local storage.
+				log.Errorf("Init S3 storage error: %s", err)
+				return
+			}
+			persistent = s3store
 		default:
 			log.Infof("Unsupported storage class")
 		}
