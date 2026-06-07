@@ -43,7 +43,7 @@
 
 ## 7. Benchmark Integration
 
-- [ ] 7.1 Add a `benchmark/` (Python) adapter that runs a configured Yazi profile end-to-end. **DEFERRED** — depends on task 4.4 (a live profile-aware server/CLI surface)
+- [x] 7.1 Add `benchmark/` `yazi-student` / `yazi-standard` adapters (selector `yazi-profiles`) that drive the live `yazictl memory recall --profile` surface and report the engine's REAL metered Usage/cost — verified against a running server (student $0, standard ~$1e-6) alongside the `sim-*` estimators
 - [x] 7.2 In-process accuracy-vs-cost frontier across profiles via `provider.RunProfiles` (student=$0 < standard); shares `Usage`/`Pricing` shapes with the benchmark (`frontier_test.go`)
 
 ## 8. Docs & Validation
