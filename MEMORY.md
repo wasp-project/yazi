@@ -2,7 +2,7 @@
 
 ## Overview
 
-The memory module turns yazi into a structured memory store on top of the existing KV and storage engine layers.
+The memory module turns Yazi into a structured memory store on top of the existing KV and storage engine layers.
 
 It is designed for scenarios such as:
 
@@ -12,7 +12,7 @@ It is designed for scenarios such as:
 - decision and context tracking
 - structured experience and cognitive policy storage
 
-The current implementation reuses the existing yazi storage path instead of introducing a separate storage backend.
+The current implementation reuses the existing Yazi storage path instead of introducing a separate storage backend.
 
 ## Storage Model
 
@@ -38,8 +38,8 @@ Index prefixes:
 
 This means:
 
-- when yazi uses local snapshot persistence, memory is persisted there
-- when yazi uses the LSM engine, memory is stored in WAL + SSTable files
+- when Yazi uses local snapshot persistence, memory is persisted there
+- when Yazi uses the LSM engine, memory is stored in WAL + SSTable files
 - when replication is enabled, memory follows the same replication path
 
 ## Memory Layers
@@ -140,7 +140,7 @@ lsm:
   walMaxSegmentEntries: 0
 ```
 
-Then start yazi:
+Then start Yazi:
 
 ```bash
 go run ./cmd/yazi
@@ -174,8 +174,8 @@ go run ./cmd/cli memory policy put --json '{"role":"coder","domain":"software","
 
 ### Step 6: verify persistence
 
-- stop yazi
-- restart yazi
+- stop Yazi
+- restart Yazi
 - run `get` or `list` again
 
 If the records remain, persistence is working through the configured storage engine.
@@ -185,7 +185,7 @@ If the records remain, persistence is working through the configured storage eng
 At the moment the easiest integration path is CLI-based:
 
 - OpenClaw calls `yazictl memory ...`
-- yazi CLI uses the existing client path
+- Yazi CLI uses the existing client path
 - server writes to the selected storage engine
 
 This is suitable when:

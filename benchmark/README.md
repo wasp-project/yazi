@@ -1,9 +1,9 @@
-# yazi Memory Benchmark
+# Yazi Memory Benchmark
 
 A **continuous comparison** harness for agent memory systems, built to make
-yazi's [cost-aware](../STATE-OF-ART.md) thesis measurable: hold retrieval quality
+Yazi's [cost-aware](../STATE-OF-ART.md) thesis measurable: hold retrieval quality
 roughly constant and compare the **recurring cost** of producing and retrieving
-memory across systems (mem0, Zep, Letta, MemOS, mem9, … vs. yazi).
+memory across systems (mem0, Zep, Letta, MemOS, mem9, … vs. Yazi).
 
 It runs **with zero external dependencies** out of the box (Python 3.10+ stdlib
 only): a cheap baseline plus per-system cost *estimators* produce a full report

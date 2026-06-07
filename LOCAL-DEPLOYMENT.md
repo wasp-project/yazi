@@ -1,12 +1,12 @@
-# Running yazi Locally as an Agent Memory Backend
+# Running Yazi Locally as an Agent Memory Backend
 
-This guide shows how to run **yazi entirely on your machine** and use it as the
+This guide shows how to run **Yazi entirely on your machine** and use it as the
 persistent memory backend for a local agent stack — specifically **OpenClaw**
 (the agent harness) driven by a **local Gemma model** (via Ollama or a similar
 runtime).
 
 Everything here is **offline and free at the margin**: no cloud, no external
-APIs for storage/retrieval, no embedding service. This is yazi's
+APIs for storage/retrieval, no embedding service. This is Yazi's
 [cost-aware](./STATE-OF-ART.md) sweet spot — deterministic, indexed memory at
 ~zero token cost, which matters most when you are running a small local model
 with a limited context window.
@@ -48,14 +48,14 @@ flowchart LR
 ```
 
 Three local processes: **Ollama** serving Gemma, the **OpenClaw** agent, and the
-**yazi** server. The agent talks to memory through the `yazictl` CLI (or the
+**Yazi** server. The agent talks to memory through the `yazictl` CLI (or the
 gRPC client directly).
 
 ---
 
 ## 2. Prerequisites
 
-- **Go** ≥ 1.21 (to build yazi and `yazictl`).
+- **Go** ≥ 1.21 (to build Yazi and `yazictl`).
 - **Ollama** (or llama.cpp / LM Studio) to run Gemma locally — https://ollama.com
 - **OpenClaw**, configured to use your local Gemma model and able to run shell
   commands (so it can call `yazictl`).
@@ -65,7 +65,7 @@ gRPC client directly).
 
 ---
 
-## 3. Step 1 — Run yazi locally
+## 3. Step 1 — Run Yazi locally
 
 Use the local profile (single node, durable LSM on disk, tenant bypass):
 
@@ -111,7 +111,7 @@ ollama run gemma3           # interactive, or just `ollama serve` to expose the 
 Ollama serves an OpenAI-compatible API at `http://localhost:11434`. Point
 OpenClaw's model configuration at that endpoint and model name. Small Gemma
 variants (1B–4B) run comfortably on a laptop; their **small context windows** are
-exactly why offloading long-term memory to yazi pays off.
+exactly why offloading long-term memory to Yazi pays off.
 
 ---
 
@@ -138,7 +138,7 @@ Now OpenClaw can shell out to `yazictl memory ...`. The CLI defaults to
 
 ## 6. Step 4 — The Memory Loop
 
-A local agent uses yazi in a simple **recall → act → remember** loop each turn:
+A local agent uses Yazi in a simple **recall → act → remember** loop each turn:
 
 1. **Recall (before prompting Gemma).** Pull only the relevant memories and
    inject them into the prompt. Keep it small — local models have little context.
@@ -166,7 +166,7 @@ local gRPC round-trips, not tokens.
 
 ## 7. Mapping Memory Layers to a Local Agent
 
-| yazi layer | Use it for | When the agent writes it |
+| Yazi layer | Use it for | When the agent writes it |
 | --- | --- | --- |
 | **basic** (preference / history / decision / context) | raw facts: user prefs, choices made, observations | continuously, post-turn |
 | **advanced** (title / summary / evidence) | distilled patterns of behavior/working style | periodically, from basics |
@@ -202,7 +202,7 @@ yazictl memory basic put --json '{"kind":"decision","scope":"project","subject":
 ## 9. OpenClaw System-Prompt Rules
 
 Add a block like this to OpenClaw's system prompt / `MEMORY.md` so the agent uses
-yazi consistently (commands match the current CLI):
+Yazi consistently (commands match the current CLI):
 
 ```markdown
 # External Memory (yazi)
@@ -254,7 +254,7 @@ Omit `--tenant` for the default shared (bypass) namespace.
 
 | Symptom | Fix |
 | --- | --- |
-| `connection refused` from `yazictl` | yazi server not running, or wrong port — start `go run ./cmd/yazi`, default `:3456` |
+| `connection refused` from `yazictl` | Yazi server not running, or wrong port — start `go run ./cmd/yazi`, default `:3456` |
 | `missing LC_UUID` on build/test (macOS) | prefix with `CGO_ENABLED=0` |
 | Gemma not responding | ensure `ollama serve` is up and the model is pulled (`ollama list`) |
 | memory empty after restart | confirm `engine: lsm` (not `mem`) and that `data/lsm/` is writable |

@@ -1,7 +1,7 @@
 # Architecture
 
-This document describes the design and implementation of yazi as a **layered
-memory system for LLM agents**. yazi started as a lightweight KV server with
+This document describes the design and implementation of Yazi as a **layered
+memory system for LLM agents**. Yazi started as a lightweight KV server with
 pluggable protocol, persistence and storage-engine layers; on top of that core
 it now provides a structured memory model and the seams needed to run the same
 binary locally (single-tenant, offline) or in the cloud (company-wide,
@@ -300,7 +300,7 @@ pkg/
 ## 8. Design Decisions & Trade-offs
 
 - **Tenancy = key prefix, not a storage wrapper.** Isolation is a namespacing
-  concern, matching yazi's existing prefix conventions (`/_data`, `/_meta`,
+  concern, matching Yazi's existing prefix conventions (`/_data`, `/_meta`,
   `/_raft`). The engine never learns about tenants; an external implementation
   only needs to satisfy `tenant.Service`.
 - **Snapshot-granularity cloud persistence.** S3 stores the encoded snapshot

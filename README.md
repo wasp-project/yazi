@@ -1,4 +1,4 @@
-# yazi
+# Yazi
 
 [![GitHub release](https://img.shields.io/github/release/wasp-project/yazi.svg)](https://github.com/wasp-project/yazi/releases)
 [![codecov](https://codecov.io/gh/wasp-project/yazi/branch/main/graph/badge.svg)](https://codecov.io/gh/wasp-project/yazi)
@@ -7,11 +7,11 @@
 
 ## Overview
 
-yazi is a lightweight KV server with configurable protocol, persistence and storage engine layers. It now includes a memory-oriented data model that can be used as a local memory store for OpenClaw or similar LLM applications.
+Yazi is a lightweight KV server with configurable protocol, persistence and storage engine layers. It now includes a memory-oriented data model that can be used as a local memory store for OpenClaw or similar LLM applications.
 
 ## Goal
 
-The current goal is to grow yazi into a **layered memory system for LLM agents**
+The current goal is to grow Yazi into a **layered memory system for LLM agents**
 that runs the same binary in two modes:
 
 - **Locally** — single node, offline, durable on disk (LSM), single-tenant — as
@@ -144,7 +144,7 @@ go run ./cmd/cli --tenant acme   memory basic put --json '{"kind":"preference","
 go run ./cmd/cli --tenant globex memory basic list --filter '{"scope":"user"}'   # never sees acme's records
 ```
 
-> Using yazi as the local memory backend for an agent stack (OpenClaw + a local
+> Using Yazi as the local memory backend for an agent stack (OpenClaw + a local
 > Gemma model via Ollama)? See **[LOCAL-DEPLOYMENT.md](./LOCAL-DEPLOYMENT.md)**
 > for the full recall → act → remember setup.
 
@@ -236,9 +236,9 @@ Data is persisted under `lsm.dir` with WAL and SSTable files.
 
 ## OpenClaw Memory Store
 
-yazi now provides a memory data model on top of the existing KV/storage layer. It does not bypass the storage engine. Instead:
+Yazi now provides a memory data model on top of the existing KV/storage layer. It does not bypass the storage engine. Instead:
 
-- CLI talks to yazi through the existing client protocol
+- CLI talks to Yazi through the existing client protocol
 - server writes memory data into the selected KV/storage engine
 - persistence depends on the configured engine/persistence mode
 
@@ -252,7 +252,7 @@ Detailed usage is documented in [MEMORY.md](./MEMORY.md) and the design in [ARCH
 
 ## Local Memory Test
 
-### 1. Start yazi with persistence
+### 1. Start Yazi with persistence
 
 Recommended for local verification:
 
@@ -313,4 +313,4 @@ go test ./cmd/cli
 - `grpc` is the recommended protocol for local memory testing
 - memory commands currently operate through the existing CLI client path
 - memory payloads are JSON documents stored inside the selected KV engine
-- if you want OpenClaw to call yazi by RPC instead of CLI, the next step is to expose a dedicated memory RPC service
+- if you want OpenClaw to call Yazi by RPC instead of CLI, the next step is to expose a dedicated memory RPC service

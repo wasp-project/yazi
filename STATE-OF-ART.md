@@ -1,16 +1,16 @@
-# State of the Art: Agent Memory Systems vs. yazi
+# State of the Art: Agent Memory Systems vs. Yazi
 
-This document surveys popular agent-memory systems and positions **yazi**
+This document surveys popular agent-memory systems and positions **Yazi**
 against them. The thesis is deliberate and narrow:
 
 > Most memory systems compete on **capability** — richer recall, temporal
-> reasoning, self-editing memory. yazi competes on **cost**. Our final goal is a
+> reasoning, self-editing memory. Yazi competes on **cost**. Our final goal is a
 > **cost-aware agent memory system**: one where every expensive operation
 > (LLM extraction, embeddings, RAM-resident vector indexes, LLM-in-the-loop
 > editing) is *optional, tiered, metered, and budgeted* on top of a cheap
 > deterministic core that always works at ~zero marginal token cost.
 
-This is not a claim that yazi is more capable than the systems below today — it
+This is not a claim that Yazi is more capable than the systems below today — it
 is not. It is a claim that **cost is an unserved axis**, and that at agent scale
 (many agents × high message volume × long horizons) cost is what actually
 breaks.
@@ -34,7 +34,7 @@ system can incur cost at five distinct points:
 The key observation: **C1, C2, and C4 are usually charged per message or per
 turn.** They are not one-time. A system that calls an LLM to extract facts on
 every message has a cost that scales linearly with traffic, forever. That is the
-cost yazi exists to avoid by default — and to *meter and bound* when you opt in.
+cost Yazi exists to avoid by default — and to *meter and bound* when you opt in.
 
 ---
 
@@ -85,7 +85,7 @@ HNSW / IVF / DiskANN / GPU indexes and hybrid (dense+sparse+BM25) search.
   trades RAM for disk/latency. Distributed mode is **heavy**: etcd + object
   storage/MinIO + Pulsar/Kafka + query/data/index nodes, typically on
   Kubernetes. (Milvus Lite/Standalone are far lighter.)
-- **Relevance to yazi:** Milvus is the kind of component yazi wants to make
+- **Relevance to Yazi:** Milvus is the kind of component Yazi wants to make
   *optional* — you should not need a billion-vector cluster to remember a user's
   preferences.
 
@@ -135,7 +135,7 @@ full-text).
   a raw mode exists.
 - **Retrieval (C2/C4):** hybrid vector + full-text, ranked by relevance.
 - **Cost profile:** LLM tokens on smart ingest + embeddings + TiDB
-  storage/compute. **This is yazi's closest neighbor** — same Go client/server
+  storage/compute. **This is Yazi's closest neighbor** — same Go client/server
   shape, same OpenClaw target — but it mandates a distributed SQL+vector backend
   (TiDB) and LLM-based ingest as the primary path.
 
@@ -153,7 +153,7 @@ full-text).
 | **Letta** | stateful agent | pgvector + Postgres | LLM self-edit via tools | core in-context + vector | **Yes** (heavy) |
 | **MemOS** | memory OS | graph + vector + KV-cache | LLM extract + tiering | vector + graph; KV reuse | **Yes** (write) |
 | **mem9** | memory server | TiDB (vector+FTS) | LLM "smart ingest" | vector + full-text | **Yes** (write) |
-| **yazi (today)** | memory engine | KV cache → LSM → S3 | **client supplies structured JSON** | **deterministic key + secondary index** | **No** |
+| **Yazi (today)** | memory engine | KV cache → LSM → S3 | **client supplies structured JSON** | **deterministic key + secondary index** | **No** |
 
 ### 3.2 Cost drivers (the point of this doc)
 
@@ -165,19 +165,19 @@ full-text).
 | Letta | **per edit** | yes (archival) | Postgres | **large core blocks** | no | light |
 | MemOS | per add | yes | graph+vector | reduced | **yes** | medium-heavy |
 | mem9 | per smart-ingest | yes | TiDB | query embed | no | medium (TiDB) |
-| **yazi (today)** | **~0** | **none** | **cheap (RAM→disk→S3)** | **~0 (no query-side LLM/embed)** | roadmap | **light (single Go binary)** |
+| **Yazi (today)** | **~0** | **none** | **cheap (RAM→disk→S3)** | **~0 (no query-side LLM/embed)** | roadmap | **light (single Go binary)** |
 
 > Reading the table: every capability-first system has at least one cost that is
-> **charged per message or per turn** (bold cells). yazi's deterministic core has
+> **charged per message or per turn** (bold cells). Yazi's deterministic core has
 > none — its marginal cost per write and per read is dominated by bytes moved,
-> not tokens spent. The trade-off is equally real: yazi's core does **not** do
+> not tokens spent. The trade-off is equally real: Yazi's core does **not** do
 > semantic recall today.
 
 ---
 
-## 4. Where yazi Stands Today (Honest Assessment)
+## 4. Where Yazi Stands Today (Honest Assessment)
 
-**What yazi is now:** a lightweight Go KV/storage engine with a structured memory
+**What Yazi is now:** a lightweight Go KV/storage engine with a structured memory
 model (basic / advanced / policy), secondary indexes (kind, scope, subject, tag,
 template, role, domain, scenario), tiered persistence (in-memory cache → LSM with
 WAL/SSTable → S3 snapshot), per-tenant key namespacing, and a layered
@@ -185,8 +185,8 @@ architecture (UI → tenant → storage → cloud). See
 [ARCHITECTURE.md](./ARCHITECTURE.md).
 
 **What that buys (the cost story):**
-- **C1 ≈ 0:** yazi does not require an LLM to store memory. The agent (which is
-  already running an LLM) can hand yazi already-structured records; yazi never
+- **C1 ≈ 0:** Yazi does not require an LLM to store memory. The agent (which is
+  already running an LLM) can hand Yazi already-structured records; Yazi never
   imposes a second extraction pass.
 - **C2 = 0 today:** retrieval is by key and secondary index — exact, ordered,
   filterable — with **no embedding** at write or query time.
@@ -197,9 +197,9 @@ architecture (UI → tenant → storage → cloud). See
 - **C6 light:** a single static binary; no graph DB, no vector cluster, no queue,
   no coordinator. Runs on a laptop or on S3-backed cloud with the same image.
 
-**What yazi is *not* (yet):** it has no semantic/vector search, no LLM-based fact
+**What Yazi is *not* (yet):** it has no semantic/vector search, no LLM-based fact
 extraction or consolidation, no temporal knowledge graph, no self-editing agent
-memory, and no KV-cache reuse. Against mem0/Zep/MemOS/Letta on *capability*, yazi
+memory, and no KV-cache reuse. Against mem0/Zep/MemOS/Letta on *capability*, Yazi
 is a substrate, not a peer.
 
 That gap is the opportunity. The systems above prove the capabilities; **none of
@@ -238,12 +238,12 @@ Make cost *observable and enforceable*, which no system here does natively:
 ### 5.4 No mandatory heavy dependencies
 Stay a single Go binary. Where a vector index is genuinely needed, prefer an
 **embeddable / pluggable** index (or an S3/disk-resident ANN) over standing up a
-separate Milvus/TiDB cluster — so the *floor* cost of running yazi stays near
+separate Milvus/TiDB cluster — so the *floor* cost of running Yazi stays near
 zero and scales up only when the workload demands it.
 
 ### 5.5 Positioning summary
 
-| | Capability-first systems | yazi (cost-aware) |
+| | Capability-first systems | Yazi (cost-aware) |
 | --- | --- | --- |
 | Default write path | LLM extraction (per message) | structured put (no LLM) |
 | Default read path | embed + vector/graph search | key + index lookup |
@@ -254,7 +254,7 @@ zero and scales up only when the workload demands it.
 | North star | richer memory | **lowest total cost of memory at agent scale** |
 
 The bet: as agents move from demos to fleets, the question stops being "can it
-remember?" and becomes "what does remembering *cost* per agent per day?" yazi
+remember?" and becomes "what does remembering *cost* per agent per day?" Yazi
 aims to be the answer to the second question — and to make the first question's
 expensive features available on demand, with the meter running where you can see
 it.
@@ -274,4 +274,4 @@ support lists and default models evolve quickly between releases.
 - Letta (MemGPT) — https://github.com/letta-ai/letta · https://docs.letta.com
 - MemOS — https://github.com/MemTensor/MemOS · https://arxiv.org/abs/2507.03724
 - mem9 — https://github.com/mem9-ai/mem9 · https://www.pingcap.com/blog/how-we-built-mem9-agent-memory-product/
-- yazi — [ARCHITECTURE.md](./ARCHITECTURE.md) · [MEMORY.md](./MEMORY.md)
+- Yazi — [ARCHITECTURE.md](./ARCHITECTURE.md) · [MEMORY.md](./MEMORY.md)
