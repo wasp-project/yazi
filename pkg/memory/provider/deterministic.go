@@ -21,7 +21,7 @@ import (
 )
 
 // Deterministic, zero-token providers. These reproduce Yazi's original memory
-// behavior and form the `student` profile. They report zero LLM/embed usage.
+// behavior and form the `lite` profile. They report zero LLM/embed usage.
 
 // --- no-op write/read stages ---
 

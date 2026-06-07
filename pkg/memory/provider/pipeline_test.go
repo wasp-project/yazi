@@ -16,7 +16,7 @@ package provider
 
 import "testing"
 
-func studentItems() []Item {
+func liteItems() []Item {
 	return []Item{
 		{ID: "p1", Text: "The user prefers concise answer-first responses", Tags: []string{"style"}},
 		{ID: "p2", Text: "The user prefers dark mode in the UI", Tags: []string{"ui"}},
@@ -34,11 +34,11 @@ func ingestAll(t *testing.T, p *Pipeline, items []Item) {
 }
 
 func TestStudentPipelineZeroCostAndCorrect(t *testing.T) {
-	p, err := BuildPipeline(Config{Profile: "student"}, nil, "")
+	p, err := BuildPipeline(Config{Profile: "lite"}, nil, "")
 	if err != nil {
 		t.Fatalf("build: %v", err)
 	}
-	ingestAll(t, p, studentItems())
+	ingestAll(t, p, liteItems())
 
 	hits, u, err := p.Recall(Query{Text: "what UI theme does the user want", Tag: "ui", TopK: 3})
 	if err != nil {
@@ -48,7 +48,7 @@ func TestStudentPipelineZeroCostAndCorrect(t *testing.T) {
 		t.Fatalf("expected p2 first, got %+v", hits)
 	}
 	if u.LLMInputTokens != 0 || u.LLMOutputTokens != 0 || u.EmbedTokens != 0 {
-		t.Fatalf("student recall should cost zero tokens, got %+v", u)
+		t.Fatalf("lite recall should cost zero tokens, got %+v", u)
 	}
 }
 
@@ -88,7 +88,7 @@ func TestStandardPipelineEmbedsAndRetrieves(t *testing.T) {
 
 func TestRecallContextBudgetCaps(t *testing.T) {
 	budget := Budget{RecallContextTokens: 8} // ~enough for one short hit only
-	p, err := BuildPipeline(Config{Profile: "student", Budget: budget}, nil, "")
+	p, err := BuildPipeline(Config{Profile: "lite", Budget: budget}, nil, "")
 	if err != nil {
 		t.Fatalf("build: %v", err)
 	}

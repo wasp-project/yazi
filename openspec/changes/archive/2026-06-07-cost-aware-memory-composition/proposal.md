@@ -16,8 +16,8 @@ default, expensive only by deliberate, metered choice.
   and declares its cost/latency/infra requirements:
   - write path: `Extractor` → `Distiller` → `Embedder` → `Index`
   - read path: `Retriever` → `Reranker` → `ContextBudgeter` (+ `KVCacheReuse`)
-- Add **named memory profiles** (`student` | `standard` | `pro` | `custom`)
-  selectable via config. The default (`student`) wires the existing deterministic
+- Add **named memory profiles** (`lite` | `standard` | `pro` | `custom`)
+  selectable via config. The default (`lite`) wires the existing deterministic
   KV+index/LSM core — behavior unchanged, cost $0. Higher profiles add providers.
 - Add **cost metering and budgets**: roll per-operation `Usage` up per tenant and
   per memory class, and let a profile declare budgets (e.g. max recall-context
@@ -36,8 +36,8 @@ default, expensive only by deliberate, metered choice.
   Embedder, Index, Retriever, Reranker, KVCacheReuse), the `Usage` and
   provider-metadata (cost/latency/requires) they report, and the composed
   write/read pipeline that runs them in order with deterministic defaults.
-- `memory-profiles`: Named, config-selected compositions (`student` | `standard`
-  | `pro` | `custom`) that bind providers to pipeline stages; `student` is the
+- `memory-profiles`: Named, config-selected compositions (`lite` | `standard`
+  | `pro` | `custom`) that bind providers to pipeline stages; `lite` is the
   default and reproduces today's $0 deterministic behavior.
 - `cost-metering-and-budgets`: Per-operation `Usage` accounting aggregated per
   tenant and memory class, plus profile-declared budgets the orchestrator
@@ -55,10 +55,10 @@ default, expensive only by deliberate, metered choice.
   `pkg/config` (a `memory:` block: profile + per-stage overrides + budgets),
   `cmd/cli`/`pkg/server` wiring to select a profile, `benchmark/` adapters to run
   per-profile compositions.
-- **Config**: new `memory.profile` and `memory.budget` settings; default `student`
+- **Config**: new `memory.profile` and `memory.budget` settings; default `lite`
   keeps current behavior. Higher profiles may require external services (embedder,
   vector store) — opt-in only.
 - **Dependencies**: none by default; reference providers add optional deps (e.g. a
   local embedding runtime, a vector index) compiled in but inactive unless selected.
 - **Compatibility**: Backward compatible — absent `memory` config resolves to the
-  `student` profile (deterministic core, $0), identical to current behavior.
+  `lite` profile (deterministic core, $0), identical to current behavior.

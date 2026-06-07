@@ -27,30 +27,30 @@ func TestRunProfilesFrontier(t *testing.T) {
 		{Text: "how should answers be formatted", Tag: "style", TopK: 3},
 	}
 
-	reports := RunProfiles([]string{"student", "standard", "pro"}, items, queries, DefaultPricing())
+	reports := RunProfiles([]string{"lite", "standard", "pro"}, items, queries, DefaultPricing())
 
-	// pro requires unavailable LLM providers -> skipped; student + standard run.
+	// pro requires unavailable LLM providers -> skipped; lite + standard run.
 	byName := map[string]ProfileReport{}
 	for _, r := range reports {
 		byName[r.Profile] = r
 	}
-	student, okS := byName["student"]
+	lite, okS := byName["lite"]
 	standard, okStd := byName["standard"]
 	if !okS || !okStd {
-		t.Fatalf("expected student and standard reports, got %v", reports)
+		t.Fatalf("expected lite and standard reports, got %v", reports)
 	}
 	if _, hasPro := byName["pro"]; hasPro {
 		t.Fatalf("pro should be skipped (unavailable providers)")
 	}
 
-	// The cost-aware frontier: student is free, standard costs (embeddings).
-	if student.CostUSD != 0 {
-		t.Fatalf("student profile should be $0, got %v", student.CostUSD)
+	// The cost-aware frontier: lite is free, standard costs (embeddings).
+	if lite.CostUSD != 0 {
+		t.Fatalf("lite profile should be $0, got %v", lite.CostUSD)
 	}
 	if standard.CostUSD <= 0 {
 		t.Fatalf("standard profile should incur embedding cost, got %v", standard.CostUSD)
 	}
-	if student.Queries != 2 || standard.Queries != 2 {
+	if lite.Queries != 2 || standard.Queries != 2 {
 		t.Fatalf("both profiles should run all queries")
 	}
 }

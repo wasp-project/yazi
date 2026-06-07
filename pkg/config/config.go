@@ -48,10 +48,10 @@ type ServerConfig struct {
 }
 
 // MemoryConfig selects the cost-aware memory composition (the provider pipeline).
-// An empty value resolves to the "student" profile: the deterministic, zero-token
+// An empty value resolves to the "lite" profile: the deterministic, zero-token
 // core, identical to the original behavior. See pkg/memory/provider.
 type MemoryConfig struct {
-	// Profile: student | standard | pro | custom. Empty => student.
+	// Profile: lite | standard | pro | custom. Empty => lite.
 	Profile string `json:"profile,omitempty" yaml:"profile"`
 	// Per-stage overrides, used when Profile is "custom".
 	Embedder  string `json:"embedder,omitempty" yaml:"embedder"`   // none | local

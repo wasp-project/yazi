@@ -6,15 +6,15 @@ TBD - created by archiving change cost-aware-memory-composition. Update Purpose 
 ### Requirement: Named Memory Profiles
 
 The system SHALL support selecting a memory composition by a named profile in
-configuration: `student`, `standard`, `pro`, or `custom`. Each named profile
-SHALL bind a concrete provider to every pipeline stage. The `student` profile
+configuration: `lite`, `standard`, `pro`, or `custom`. Each named profile
+SHALL bind a concrete provider to every pipeline stage. The `lite` profile
 SHALL use only deterministic, zero-token providers (key+index retrieval, local
 storage). `standard` and `pro` SHALL add progressively more capable (and more
 costly) providers. Selecting a profile SHALL require no code change.
 
 #### Scenario: Student profile is the cheap default
 
-- **WHEN** `memory.profile` is `student` or unset
+- **WHEN** `memory.profile` is `lite` or unset
 - **THEN** the pipeline uses deterministic providers only and incurs zero
   LLM/embedding cost
 
@@ -40,7 +40,7 @@ the deterministic default for that stage.
 ### Requirement: Default Resolves to Student
 
 When no `memory` configuration is present, the system SHALL resolve to the
-`student` profile so existing deployments are unaffected.
+`lite` profile so existing deployments are unaffected.
 
 #### Scenario: Absent config is backward compatible
 
@@ -55,7 +55,7 @@ the existing tenant key-namespacing.
 
 #### Scenario: Two tenants run different profiles
 
-- **WHEN** tenant `acme` is on `student` and tenant `globex` is on `standard`
+- **WHEN** tenant `acme` is on `lite` and tenant `globex` is on `standard`
 - **THEN** each tenant's memory operations run its own pipeline and cost profile,
   and their data remains isolated by tenant prefix
 

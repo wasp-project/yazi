@@ -3,7 +3,7 @@
 Names:
   mock                       zero-cost keyword baseline (always available)
   yazi                       real adapter via yazictl (needs a running server)
-  yazi-student /
+  yazi-lite /
   yazi-standard              real Yazi composition profiles via `memory recall`
                              (ground-truth metered cost; needs a running server)
   sim-mem0 / sim-zep /
@@ -16,7 +16,7 @@ Special selectors for --adapters:
   all            -> mock + yazi + every sim-*
   sim            -> every sim-*
   real           -> mock + yazi + every real external adapter
-  yazi-profiles  -> yazi-student + yazi-standard
+  yazi-profiles  -> yazi-lite + yazi-standard
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from adapters.simulator import PROFILES, SimulatedAdapter
 from adapters import external
 
 _SIM_NAMES = [f"sim-{k}" for k in PROFILES]
-_YAZI_PROFILES = ["student", "standard"]
+_YAZI_PROFILES = ["lite", "standard"]
 _YAZI_PROFILE_NAMES = [f"yazi-{p}" for p in _YAZI_PROFILES]
 _REAL_EXTERNAL = {
     "mem0": external.Mem0Adapter,

@@ -51,6 +51,6 @@ func TestStorePipelinePersistsAndRecalls(t *testing.T) {
 		t.Fatalf("expected m1, got %+v", hits)
 	}
 	if u.EmbedTokens != 0 || u.LLMInputTokens != 0 {
-		t.Fatalf("student/store pipeline must be zero-token, got %+v", u)
+		t.Fatalf("lite/store pipeline must be zero-token, got %+v", u)
 	}
 }

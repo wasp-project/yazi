@@ -206,7 +206,7 @@ prints the hits plus the **metered cost**, so you can trade recall quality for
 cost explicitly (see [COMPOSITION.md](./COMPOSITION.md)):
 
 ```bash
-# student (default): deterministic key/keyword recall over the durable store, $0
+# lite (default): deterministic key/keyword recall over the durable store, $0
 yazictl --tenant demo memory recall --query "what UI theme does the user want" --tag ui --top-k 2
 
 # standard: embeds the query + memories and ranks by vector similarity (metered)
@@ -219,11 +219,11 @@ yazictl --tenant demo memory recall --query "..." --max-context-tokens 200
 Output is JSON with `hits`, `usage` (tokens), and `costUSD`:
 
 ```json
-{ "profile": "student", "hits": [ { "id": "...", "text": "prefers dark mode in the UI", "score": 0.25 } ],
+{ "profile": "lite", "hits": [ { "id": "...", "text": "prefers dark mode in the UI", "score": 0.25 } ],
   "usage": { "embedTokens": 0, "contextTokens": 7 }, "costUSD": 0 }
 ```
 
-- **student** costs **$0** (no LLM, no embeddings) and reads straight from the
+- **lite** costs **$0** (no LLM, no embeddings) and reads straight from the
   persisted store — the right default for a local Gemma agent.
 - **standard** embeds locally and vector-ranks; cost is tiny and stays on your
   machine. Richer profiles (`pro`: LLM extraction/rerank) are interface stubs that

@@ -25,7 +25,7 @@ import (
 // StoreBackedStore adapts a *Store to the provider.Store contract (Index +
 // Retriever), so the deterministic memory pipeline persists through Yazi's real
 // KV -> LSM -> S3 path instead of an ephemeral in-memory index. This is how the
-// `student` profile keeps Yazi's zero-token, durable behavior while still being
+// `lite` profile keeps Yazi's zero-token, durable behavior while still being
 // expressed as a pipeline. Generic provider.Item maps to the typed basic /
 // advanced / policy records by Class.
 type StoreBackedStore struct {
@@ -110,7 +110,7 @@ func (a *StoreBackedStore) Retrieve(q provider.Query, topK int) ([]provider.Hit,
 }
 
 // NewStorePipeline builds a deterministic, persistence-backed pipeline over the
-// given Store. This is the `student`-profile composition wired to durable storage.
+// given Store. This is the `lite`-profile composition wired to durable storage.
 func NewStorePipeline(s *Store, budget provider.Budget, pricing provider.Pricing, meter *provider.Meter, tenant string) *provider.Pipeline {
 	a := NewStoreBackedStore(s)
 	stages := provider.Stages{Index: a, Retriever: a}
@@ -121,14 +121,14 @@ func NewStorePipeline(s *Store, budget provider.Budget, pricing provider.Pricing
 }
 
 // RecallWithProfile recalls memories for a query using the given composition
-// profile against an existing Store. The deterministic `student` profile reads
+// profile against an existing Store. The deterministic `lite` profile reads
 // straight from the durable store (zero tokens). Richer profiles (e.g.
 // `standard`) build their own pipeline and are seeded from the store's basic
 // memories before recall, so vector/semantic profiles work over existing data
 // without a separate index. Returns the hits and the aggregated cost Usage.
 func RecallWithProfile(s *Store, cfg provider.Config, q provider.Query, meter *provider.Meter, tenant string) ([]provider.Hit, provider.Usage, error) {
 	switch strings.ToLower(cfg.Profile) {
-	case "", "student":
+	case "", "lite":
 		p := NewStorePipeline(s, cfg.Budget, cfg.Pricing, meter, tenant)
 		return p.Recall(q)
 	default:

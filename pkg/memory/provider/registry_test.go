@@ -20,7 +20,7 @@ import (
 )
 
 func TestBuildKnownProfiles(t *testing.T) {
-	for _, name := range []string{"student", "standard", ""} {
+	for _, name := range []string{"lite", "standard", ""} {
 		if _, err := BuildPipeline(Config{Profile: name}, nil, ""); err != nil {
 			t.Fatalf("profile %q should build: %v", name, err)
 		}

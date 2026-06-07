@@ -3,7 +3,7 @@
 Unlike the `sim-*` estimators, these call the actual engine: ingest writes typed
 memories, and recall invokes `yazictl memory recall --profile <profile>`, parsing
 the REAL metered Usage (embed tokens, cost) the server reports. This lets the
-benchmark place Yazi's own profiles (student vs standard) on the accuracy-vs-cost
+benchmark place Yazi's own profiles (lite vs standard) on the accuracy-vs-cost
 frontier with ground-truth numbers, not estimates.
 
 Requires a running yazi server + yazictl (same as the `yazi` adapter).

@@ -10,8 +10,8 @@ adapter interface.
 The competitive survey (STATE-OF-ART.md) shows the alternatives buy semantic
 recall, temporal reasoning, and self-editing memory at a recurring per-message
 cost (LLM extraction, embeddings, RAM-resident vector indexes). Users want to
-pick where they sit on that quality/cost curve — a student wants the free
-deterministic core; someone with budget wants embeddings + vector search; a
+pick where they sit on that quality/cost curve — some want the free
+deterministic core; others with budget want embeddings + vector search; a
 well-funded team wants the full stack. This change makes the memory path a
 **composable pipeline of providers** with **declared, metered, budgetable cost**,
 so Yazi orchestrates capabilities instead of reimplementing competitors.
@@ -25,8 +25,8 @@ benchmark harness; wrap external systems rather than reimplement them.
 **Goals:**
 - A provider interface for each pipeline stage, each reporting `Usage` and
   declaring cost/latency/requirements.
-- Named profiles (`student`/`standard`/`pro`/`custom`) selecting providers via
-  config, with `student` as the unchanged default.
+- Named profiles (`lite`/`standard`/`pro`/`custom`) selecting providers via
+  config, with `lite` as the unchanged default.
 - Per-tenant, per-class cost metering and profile-declared budget enforcement.
 - Ship deterministic defaults + one real "standard" path (embedder + vector
   index); leave extraction/graph/rerank as interface-only stubs.
@@ -38,7 +38,7 @@ benchmark harness; wrap external systems rather than reimplement them.
 - Building our own vector DB or embedding model (we wrap pgvector / Milvus Lite /
   a local embedder).
 - Changing the memory data model, key layout, or the deterministic read/write
-  semantics of the `student` profile.
+  semantics of the `lite` profile.
 - A pricing/billing system (we estimate cost from usage + a price table; billing
   is out of scope).
 
@@ -68,10 +68,10 @@ configurable `Pricing` table converts it to a $ estimate.
 - **Alternative**: Each provider returns a $ figure directly. Rejected — bakes in
   prices, breaks re-pricing, and hides the token breakdown.
 
-### Decision 3: Profiles are config that binds providers; default = student
+### Decision 3: Profiles are config that binds providers; default = lite
 A `memory:` config block selects `profile` and, for `custom`, per-stage provider
 names + options, plus `budget`. A registry resolves names → provider constructors.
-Unset config → `student` (all deterministic defaults).
+Unset config → `lite` (all deterministic defaults).
 - **Why**: "Same binary, choose your cost" with zero code change, consistent with
   how `storage`/`engine`/`tenant` are already configured. Per-tenant profiles ride
   the existing tenant seam.
@@ -111,12 +111,12 @@ composition on the accuracy-vs-cost frontier — the tool for *choosing* a profi
   (deterministic + one standard path) and interface-only stubs; gate new providers
   on demand. Document what is stub vs real.
 - **Heavy providers pull dependencies / ops weight** → Keep them opt-in and
-  compiled-but-inactive; the `student` default stays single-binary and offline.
+  compiled-but-inactive; the `lite` default stays single-binary and offline.
   Validate provider requirements at startup (fail fast, like S3).
 - **Usage under-reporting skews cost** → Deterministic/local providers report
   tokens=0 honestly; hosted providers report from SDK responses; local-compute cost
   is surfaced as latency, not $ (documented).
-- **Pipeline overhead on the hot path** → The `student` pipeline is a thin pass-through
+- **Pipeline overhead on the hot path** → The `lite` pipeline is a thin pass-through
   of no-op stages over the existing store; benchmark the default to confirm parity.
 - **Two interfaces (engine providers vs benchmark adapter) drift** → Keep the
   `Usage`/`Pricing` shapes identical across both; share field names with
@@ -128,12 +128,12 @@ composition on the accuracy-vs-cost frontier — the tool for *choosing* a profi
    defaults, `Meter`) with no wiring change — defaults reproduce current behavior.
 2. Route `memory.Store` Ingest/Recall through the default pipeline; verify parity
    with existing memory tests.
-3. Add the `memory:` config block + profile registry; `student` default.
+3. Add the `memory:` config block + profile registry; `lite` default.
 4. Add the reference `standard` providers (embedder + vector index) behind opt-in
    config and startup requirement checks.
 5. Add metering/budgets + enforcement modes.
 6. Extend `benchmark/` with per-profile adapters; publish the frontier.
-7. **Rollback**: unset `memory` config → `student` → identical to today; no data
+7. **Rollback**: unset `memory` config → `lite` → identical to today; no data
    migration (the deterministic layout is unchanged).
 
 ## Open Questions

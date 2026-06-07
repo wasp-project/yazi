@@ -23,11 +23,11 @@ like Yazi's original memory store.
 
 ## Profiles (the user choice)
 
-Configured via the `memory:` block (absent ⇒ `student`):
+Configured via the `memory:` block (absent ⇒ `lite`):
 
 ```yaml
 memory:
-  profile: standard        # student | standard | pro | custom
+  profile: standard        # lite | standard | pro | custom
   budget:                  # optional; zero fields = unbounded
     recallContextTokens: 1500
     ingestMaxUSD: 0.50
@@ -41,12 +41,12 @@ memory:
 
 | Profile | Composition | Cost |
 | --- | --- | --- |
-| **student** | keyword/index store, no embeddings | **$0 tokens**, durable via KV→LSM→S3 |
+| **lite** | keyword/index store, no embeddings | **$0 tokens**, durable via KV→LSM→S3 |
 | **standard** | local embedder + vector retrieval | embedding cost, mostly local |
 | **pro** | + LLM extraction + LLM rerank (interface stubs) | full capability, metered |
 | **custom** | bind each stage; unset stages use the cheap default | you decide |
 
-`student` keeps Yazi's deterministic, persistent, zero-token behavior. Higher
+`lite` keeps Yazi's deterministic, persistent, zero-token behavior. Higher
 profiles add providers; selecting a provider whose requirements are unmet **fails
 fast at startup** rather than breaking mid-request — so `pro` errors until the LLM
 providers are wired up.
@@ -62,7 +62,7 @@ providers are wired up.
 
 ## What ships now vs. wrapped later
 
-- **Real, dependency-free, tested:** the deterministic `student` providers
+- **Real, dependency-free, tested:** the deterministic `lite` providers
   (persistence-backed via `pkg/memory` `StoreBackedStore`), a local hashing
   `Embedder`, and an in-memory cosine `VectorIndex` for `standard`.
 - **Interface-only stubs** (report `Available() == false`): `LLMExtractor`,

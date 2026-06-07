@@ -31,7 +31,7 @@ type Store interface {
 // when Profile == "custom", the per-stage fields are used (each defaulting to the
 // cheap option). Pricing/Budget apply to any profile.
 type Config struct {
-	Profile   string  // student | standard | pro | custom
+	Profile   string  // lite | standard | pro | custom
 	Embedder  string  // none | local
 	Store     string  // keyword | vector | pgvector
 	Extractor string  // none | llm
@@ -40,18 +40,18 @@ type Config struct {
 	Pricing   Pricing
 }
 
-// DefaultConfig is the cheap, deterministic student profile.
+// DefaultConfig is the cheap, deterministic lite profile.
 func DefaultConfig() Config {
-	return Config{Profile: "student", Pricing: DefaultPricing()}
+	return Config{Profile: "lite", Pricing: DefaultPricing()}
 }
 
 // Profiles lists the known named profiles.
-func Profiles() []string { return []string{"student", "standard", "pro", "custom"} }
+func Profiles() []string { return []string{"lite", "standard", "pro", "custom"} }
 
 // resolveNames expands a profile into concrete per-stage provider names.
 func resolveNames(c Config) (embedder, store, extractor, reranker string, err error) {
 	switch strings.ToLower(c.Profile) {
-	case "", "student":
+	case "", "lite":
 		return "none", "keyword", "none", "none", nil
 	case "standard":
 		return "local", "vector", "none", "none", nil

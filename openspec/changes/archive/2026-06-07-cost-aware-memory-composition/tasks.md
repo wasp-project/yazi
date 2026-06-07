@@ -10,7 +10,7 @@
 
 - [x] 2.1 Implement no-op `Extractor`, `Distiller`, `Embedder`, `Reranker` and a top-k `ContextBudgeter`, all reporting zero token usage
 - [x] 2.2 Implement a key+keyword/tag `Index` and `Retriever` (`KeywordStore`) that mirror the existing store's filter/rank semantics
-- [x] 2.3 Build a `student` default pipeline from these providers (via the registry)
+- [x] 2.3 Build a `lite` default pipeline from these providers (via the registry)
 - [x] 2.4 Tests: the default pipeline returns correct hits and reports zero LLM/embed usage
 
 ## 3. Route memory.Store Through the Pipeline
@@ -20,8 +20,8 @@
 
 ## 4. Profiles & Configuration
 
-- [x] 4.1 Add a `memory:` block to `pkg/config` (`profile`, per-stage overrides for `custom`, and `budget`); absent block resolves to `student`
-- [x] 4.2 Add a provider registry + profile resolver building a `Pipeline` from config (`student`/`standard`/`pro`/`custom`)
+- [x] 4.1 Add a `memory:` block to `pkg/config` (`profile`, per-stage overrides for `custom`, and `budget`); absent block resolves to `lite`
+- [x] 4.2 Add a provider registry + profile resolver building a `Pipeline` from config (`lite`/`standard`/`pro`/`custom`)
 - [x] 4.3 Validate provider requirements at build time; fail fast with a clear error when a selected provider is unavailable
 - [x] 4.4 Add a profile-aware `yazictl memory recall --query --profile --tag --top-k --max-context-tokens` command (additive; typed CRUD intact). It builds the pipeline per `--tenant`/`--profile`, runs Recall over the durable store, and prints hits + metered Usage + costUSD. NOTE: metering is per-invocation (client-side); **server-side persistent metering** remains a follow-up
 - [x] 4.5 Tests: `custom` overrides only named stages; unset config behaves like today; unavailable custom store fails fast (per-tenant profiles are supported by construction — a pipeline is built per tenant)
@@ -43,11 +43,11 @@
 
 ## 7. Benchmark Integration
 
-- [x] 7.1 Add `benchmark/` `yazi-student` / `yazi-standard` adapters (selector `yazi-profiles`) that drive the live `yazictl memory recall --profile` surface and report the engine's REAL metered Usage/cost — verified against a running server (student $0, standard ~$1e-6) alongside the `sim-*` estimators
-- [x] 7.2 In-process accuracy-vs-cost frontier across profiles via `provider.RunProfiles` (student=$0 < standard); shares `Usage`/`Pricing` shapes with the benchmark (`frontier_test.go`)
+- [x] 7.1 Add `benchmark/` `yazi-lite` / `yazi-standard` adapters (selector `yazi-profiles`) that drive the live `yazictl memory recall --profile` surface and report the engine's REAL metered Usage/cost — verified against a running server (lite $0, standard ~$1e-6) alongside the `sim-*` estimators
+- [x] 7.2 In-process accuracy-vs-cost frontier across profiles via `provider.RunProfiles` (lite=$0 < standard); shares `Usage`/`Pricing` shapes with the benchmark (`frontier_test.go`)
 
 ## 8. Docs & Validation
 
 - [x] 8.1 Document the provider interfaces, profiles, budgets, and the `memory:` config in `COMPOSITION.md` (linked from the design)
 - [x] 8.2 Architecture conformance test (`pkg/arch`) asserts the provider layer is self-contained (imports no other Yazi package)
-- [x] 8.3 `CGO_ENABLED=0 go build ./...` and `go test ./...` pass; the `student` default is unchanged
+- [x] 8.3 `CGO_ENABLED=0 go build ./...` and `go test ./...` pass; the `lite` default is unchanged

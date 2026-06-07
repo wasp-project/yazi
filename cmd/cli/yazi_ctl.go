@@ -101,8 +101,8 @@ var (
 
 	memoryRecallCmd = &cobra.Command{
 		Use:   "recall",
-		Short: "yazictl memory recall --query '<text>' [--profile student|standard] [--tag T] [--top-k N]",
-		Long: "Recall memories with a cost-aware composition profile. 'student' (default) reads " +
+		Short: "yazictl memory recall --query '<text>' [--profile lite|standard] [--tag T] [--top-k N]",
+		Long: "Recall memories with a cost-aware composition profile. 'lite' (default) reads " +
 			"the durable store at zero token cost; 'standard' embeds and vector-searches. " +
 			"Prints the hits plus the metered Usage and estimated cost.",
 		Run: memoryRecallf,
@@ -500,7 +500,7 @@ var (
 		}
 		profile := recallProfile
 		if profile == "" {
-			profile = "student"
+			profile = "lite"
 		}
 		out := map[string]interface{}{
 			"profile": profile,
@@ -579,7 +579,7 @@ func init() {
 	memoryPolicyListCmd.Flags().StringVar(&memoryFilter, "filter", "", "filter json")
 
 	memoryRecallCmd.Flags().StringVar(&recallQuery, "query", "", "recall query text")
-	memoryRecallCmd.Flags().StringVar(&recallProfile, "profile", "student", "composition profile: student | standard")
+	memoryRecallCmd.Flags().StringVar(&recallProfile, "profile", "lite", "composition profile: lite | standard")
 	memoryRecallCmd.Flags().StringVar(&recallTag, "tag", "", "restrict candidates to this tag")
 	memoryRecallCmd.Flags().IntVar(&recallTopK, "top-k", 5, "max memories to return")
 	memoryRecallCmd.Flags().IntVar(&recallMaxContext, "max-context-tokens", 0, "cap recalled context tokens (0 = unbounded)")
