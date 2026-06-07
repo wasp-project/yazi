@@ -95,6 +95,24 @@ func TestStorageEngineLayerIsIndependent(t *testing.T) {
 	}
 }
 
+// TestProviderLayerIsSelfContained asserts the cost-aware composition layer
+// (pkg/memory/provider) depends on no other Yazi package. Providers are the
+// orchestration seam: the core must stay dependency-light so it never couples
+// back to storage, server, or tenant internals.
+func TestProviderLayerIsSelfContained(t *testing.T) {
+	root := repoRoot(t)
+	providerDir := filepath.Join(root, "pkg", "memory", "provider")
+
+	for file, imps := range imports(t, providerDir) {
+		for _, imp := range imps {
+			if strings.HasPrefix(imp, modulePath+"/") {
+				rel, _ := filepath.Rel(root, file)
+				t.Errorf("provider layer must be self-contained, but %s imports %s", rel, imp)
+			}
+		}
+	}
+}
+
 // TestTenantLayerIsStorageAgnostic asserts the tenant-service layer does not
 // depend on the storage engine, keeping its interface implementable by an
 // external project without coupling to internal persistence details.

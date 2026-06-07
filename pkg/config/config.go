@@ -44,6 +44,29 @@ type ServerConfig struct {
 	Replication     ReplicationConfig        `json:"replication,omitempty" yaml:"replication"`
 	S3              S3Config                 `json:"s3,omitempty" yaml:"s3"`
 	Tenant          TenantConfig             `json:"tenant,omitempty" yaml:"tenant"`
+	Memory          MemoryConfig             `json:"memory,omitempty" yaml:"memory"`
+}
+
+// MemoryConfig selects the cost-aware memory composition (the provider pipeline).
+// An empty value resolves to the "student" profile: the deterministic, zero-token
+// core, identical to the original behavior. See pkg/memory/provider.
+type MemoryConfig struct {
+	// Profile: student | standard | pro | custom. Empty => student.
+	Profile string `json:"profile,omitempty" yaml:"profile"`
+	// Per-stage overrides, used when Profile is "custom".
+	Embedder  string `json:"embedder,omitempty" yaml:"embedder"`   // none | local
+	Store     string `json:"store,omitempty" yaml:"store"`         // keyword | vector | pgvector
+	Extractor string `json:"extractor,omitempty" yaml:"extractor"` // none | llm
+	Reranker  string `json:"reranker,omitempty" yaml:"reranker"`   // none | llm
+	// Budget bounds recurring cost (zero fields = unbounded).
+	Budget MemoryBudget `json:"budget,omitempty" yaml:"budget"`
+}
+
+// MemoryBudget mirrors provider.Budget in plain config form.
+type MemoryBudget struct {
+	RecallContextTokens int     `json:"recallContextTokens,omitempty" yaml:"recallContextTokens"`
+	IngestMaxUSD        float64 `json:"ingestMaxUSD,omitempty" yaml:"ingestMaxUSD"`
+	Mode                string  `json:"mode,omitempty" yaml:"mode"` // reject | degrade
 }
 
 // TenantConfig configures the tenant-service layer. When absent (the zero

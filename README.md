@@ -30,7 +30,9 @@ system**: keep a cheap deterministic core (key/index retrieval at ~zero token
 cost, tiered RAM → disk → S3 storage) and make expensive features — semantic
 search, LLM-based extraction, temporal reasoning — *opt-in, metered, and
 budgeted* rather than mandatory. See **[STATE-OF-ART.md](./STATE-OF-ART.md)** for
-how this compares to mem0, Zep, Milvus, Letta, MemOS, and mem9.
+how this compares to mem0, Zep, Milvus, Letta, MemOS, and mem9, and
+**[COMPOSITION.md](./COMPOSITION.md)** for the pluggable provider/profile layer
+that lets users pick their quality/cost point.
 
 The storage capabilities below back this goal:
 
