@@ -144,6 +144,10 @@ go run ./cmd/cli --tenant acme   memory basic put --json '{"kind":"preference","
 go run ./cmd/cli --tenant globex memory basic list --filter '{"scope":"user"}'   # never sees acme's records
 ```
 
+> Using yazi as the local memory backend for an agent stack (OpenClaw + a local
+> Gemma model via Ollama)? See **[LOCAL-DEPLOYMENT.md](./LOCAL-DEPLOYMENT.md)**
+> for the full recall → act → remember setup.
+
 ### Run on the cloud (multi-tenant, S3-backed)
 
 ```bash
