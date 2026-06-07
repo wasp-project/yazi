@@ -25,6 +25,13 @@ The tenant layer is a no-op by default and an interface point for a future
 multi-tenant project; the cloud layer is a pluggable persistence backend. See
 **[ARCHITECTURE.md](./ARCHITECTURE.md)** for the full design and diagrams.
 
+The long-term direction and core value is to be a **cost-aware agent memory
+system**: keep a cheap deterministic core (key/index retrieval at ~zero token
+cost, tiered RAM → disk → S3 storage) and make expensive features — semantic
+search, LLM-based extraction, temporal reasoning — *opt-in, metered, and
+budgeted* rather than mandatory. See **[STATE-OF-ART.md](./STATE-OF-ART.md)** for
+how this compares to mem0, Zep, Milvus, Letta, MemOS, and mem9.
+
 The storage capabilities below back this goal:
 
 - in-memory KV with local snapshot persistence
