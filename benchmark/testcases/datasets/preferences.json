@@ -1,0 +1,19 @@
+{
+  "name": "preferences",
+  "description": "Store user/agent preferences and recall the right one. Tests exact preference persistence with distractors present.",
+  "items": [
+    {"id": "p1", "text": "The user prefers concise, answer-first responses.", "kind": "preference", "scope": "user", "subject": "style", "tags": ["style", "format"]},
+    {"id": "p2", "text": "The user prefers dark mode in the UI.", "kind": "preference", "scope": "user", "subject": "ui", "tags": ["ui", "theme"]},
+    {"id": "p3", "text": "The user wants code examples in Go, not Python.", "kind": "preference", "scope": "user", "subject": "code", "tags": ["code", "language"]},
+    {"id": "p4", "text": "The user is in the Europe/Berlin timezone.", "kind": "context", "scope": "user", "subject": "locale", "tags": ["locale"]},
+    {"id": "p5", "text": "The user dislikes emojis in technical answers.", "kind": "preference", "scope": "user", "subject": "style", "tags": ["style", "tone"]},
+    {"id": "p6", "text": "The user prefers metric units.", "kind": "preference", "scope": "user", "subject": "units", "tags": ["units"]}
+  ],
+  "queries": [
+    {"text": "How should I format my answers for this user?", "expected_ids": ["p1"], "expected_substring": "answer-first", "tag": "style", "top_k": 3},
+    {"text": "What UI theme does the user want?", "expected_ids": ["p2"], "expected_substring": "dark mode", "tag": "ui", "top_k": 3},
+    {"text": "Which programming language should code samples use?", "expected_ids": ["p3"], "expected_substring": "Go", "tag": "code", "top_k": 3},
+    {"text": "Should I use emojis?", "expected_ids": ["p5"], "expected_substring": "emojis", "tag": "style", "top_k": 3},
+    {"text": "What units should measurements use?", "expected_ids": ["p6"], "expected_substring": "metric", "tag": "units", "top_k": 3}
+  ]
+}

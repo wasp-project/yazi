@@ -1,0 +1,22 @@
+{
+  "name": "multi_session",
+  "description": "Facts and decisions accumulated across many sessions; recall the correct historical decision among similar-looking distractors. Tests cross-session long-horizon recall.",
+  "items": [
+    {"id": "s1", "text": "Decided to use the LSM engine for durable local memory.", "kind": "decision", "scope": "project", "subject": "storage", "tags": ["storage", "decision"]},
+    {"id": "s2", "text": "Decided to avoid adding the AWS SDK; use a stdlib SigV4 signer instead.", "kind": "decision", "scope": "project", "subject": "deps", "tags": ["deps", "cost", "decision"]},
+    {"id": "s3", "text": "Agreed the tenant prefix format is tenant/<id>/.", "kind": "decision", "scope": "project", "subject": "tenant", "tags": ["tenant", "decision"]},
+    {"id": "s4", "text": "Chose gRPC as the default protocol for memory testing.", "kind": "decision", "scope": "project", "subject": "protocol", "tags": ["protocol", "decision"]},
+    {"id": "s5", "text": "Set the scheduled persistence period to 10 seconds.", "kind": "decision", "scope": "project", "subject": "persistence", "tags": ["persistence", "decision"]},
+    {"id": "s6", "text": "The build needs CGO_ENABLED=0 on this macOS to avoid an LC_UUID linker error.", "kind": "context", "scope": "project", "subject": "build", "tags": ["build", "env"]},
+    {"id": "s7", "text": "S3 cloud mode must fail fast when the bucket is missing.", "kind": "decision", "scope": "project", "subject": "cloud", "tags": ["cloud", "s3", "decision"]},
+    {"id": "s8", "text": "Memory keys live under /_memory/ and are further prefixed with /_data/ at the server.", "kind": "context", "scope": "project", "subject": "keys", "tags": ["keys"]}
+  ],
+  "queries": [
+    {"text": "Why didn't we use the AWS SDK?", "expected_ids": ["s2"], "expected_substring": "SigV4", "tag": "deps", "top_k": 3},
+    {"text": "What storage engine did we pick for durability?", "expected_ids": ["s1"], "expected_substring": "LSM", "tag": "storage", "top_k": 3},
+    {"text": "What is the tenant key prefix format?", "expected_ids": ["s3"], "expected_substring": "tenant/", "tag": "tenant", "top_k": 3},
+    {"text": "What does the build need on this mac?", "expected_ids": ["s6"], "expected_substring": "CGO_ENABLED=0", "tag": "build", "top_k": 3},
+    {"text": "How should cloud mode behave with a missing bucket?", "expected_ids": ["s7"], "expected_substring": "fail fast", "tag": "cloud", "top_k": 3},
+    {"text": "Which protocol is the default for memory?", "expected_ids": ["s4"], "expected_substring": "gRPC", "tag": "protocol", "top_k": 3}
+  ]
+}

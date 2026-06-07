@@ -1,0 +1,5 @@
+# Generated benchmark outputs — keep the directory, ignore the artifacts.
+results/*
+!results/.gitkeep
+__pycache__/
+*.pyc

@@ -1,0 +1,13 @@
+# Core benchmark framework needs NOTHING beyond the Python 3.10+ standard library.
+# Everything below is OPTIONAL.
+
+# Richer PNG charts (the framework always emits dependency-free SVGs):
+# matplotlib>=3.7
+
+# Real external adapters (adapters/external.py) — install only the ones you wire up.
+# Each also needs a backend and (for LLM-based ones) provider API keys.
+# mem0ai
+# zep-cloud           # or: graphiti-core
+# letta
+# pymilvus
+# MemoryOS            # MemOS (package name may vary by release)
