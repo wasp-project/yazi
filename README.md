@@ -34,6 +34,12 @@ how this compares to mem0, Zep, Milvus, Letta, MemOS, and mem9, and
 **[COMPOSITION.md](./COMPOSITION.md)** for the pluggable provider/profile layer
 that lets users pick their quality/cost point.
 
+New here? **[QUICKSTART.md](./QUICKSTART.md)** gets you from clone to a working
+agent memory store in five minutes. The **[engineering blog](./blog/)** documents
+how each milestone was designed, built and measured — start with
+[post 000](./blog/000-from-kv-store-to-agent-memory.md) for the current state and
+an honest list of what is not yet implemented.
+
 The storage capabilities below back this goal:
 
 - in-memory KV with local snapshot persistence
