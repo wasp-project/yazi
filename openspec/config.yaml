@@ -1,13 +1,31 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Yazi is a cost-aware memory engine for LLM agents, written in Go.
+
+  Tech stack: Go 1.21+, gRPC + a custom "naive" protocol, no database.
+  Six direct module dependencies; keep it that way.
+
+  Non-negotiable constraints for any change:
+  - Single static binary. No mandatory database, queue or coordinator.
+  - No new module dependency for a problem the standard library can solve
+    (precedent: the hand-rolled AWS SigV4 signer in pkg/storage/s3).
+  - The `lite` profile stays at zero LLM and zero embedding tokens. Any feature
+    that spends money is opt-in, metered and budgeted.
+  - Layers depend downward only (UI -> tenant -> storage -> cloud), enforced by
+    the conformance test in pkg/arch.
+  - The on-disk memory key layout (/_memory/..., tenant/<id>/...) is stable.
+
+  Honesty conventions (these are load-bearing for the project's positioning):
+  - Never fabricate a capability. An unimplemented provider is an interface that
+    reports Available() == false and fails fast, not a fake implementation.
+  - Never fabricate a measurement. Estimates are labelled as estimates, matching
+    the `*` convention in benchmark/README.md.
+  - Never cap or truncate results silently; log what was dropped.
+
+  Every milestone change MUST end with a task that writes its engineering blog
+  post under blog/, following the `engineering-blog` capability. The change is
+  not complete until the post exists. See blog/README.md.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
